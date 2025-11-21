@@ -10,11 +10,14 @@ import {
   SafeAreaView,
   Image,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { selectActiveLeague } from '../redux/sportsSlice';
 
 const MatchesScreen = ({ navigation }) => {
+  const activeLeague = useSelector(selectActiveLeague);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +27,7 @@ const MatchesScreen = ({ navigation }) => {
       setLoading(true);
       setError(null);
       const response = await axios.get(
-        'https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4328'
+        `https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${activeLeague.id}`
       );
       setMatches(response.data.events || []);
     } catch (err) {
@@ -36,7 +39,7 @@ const MatchesScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchMatches();
-  }, []);
+  }, [activeLeague.id]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -61,7 +64,7 @@ const MatchesScreen = ({ navigation }) => {
         <Icon name="arrow-left" size={24} color={COLORS.white} />
       </TouchableOpacity>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Upcoming Matches</Text>
+        <Text style={styles.headerTitle}>{activeLeague.name} Matches</Text>
         <Text style={styles.headerSubtitle}>
           {matches.length} fixtures scheduled
         </Text>

@@ -17,6 +17,7 @@ import {
   selectAllTeams,
   selectIsLoading,
   selectError,
+  selectActiveLeague,
 } from '../redux/sportsSlice';
 import TeamCard from '../components/TeamCard';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
@@ -26,14 +27,15 @@ const TeamsScreen = ({ navigation }) => {
   const teams = useSelector(selectAllTeams);
   const loading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
+  const activeLeague = useSelector(selectActiveLeague);
 
   useEffect(() => {
     dispatch(loadFavorites());
-    dispatch(fetchTeams());
-  }, [dispatch]);
+    dispatch(fetchTeams(activeLeague.str));
+  }, [dispatch, activeLeague.str]);
 
   const handleRefresh = () => {
-    dispatch(fetchTeams());
+    dispatch(fetchTeams(activeLeague.str));
   };
 
   const renderHeader = () => (
@@ -44,7 +46,7 @@ const TeamsScreen = ({ navigation }) => {
         <Icon name="arrow-left" size={24} color={COLORS.white} />
       </TouchableOpacity>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Premier League Teams</Text>
+        <Text style={styles.headerTitle}>{activeLeague.name} Teams</Text>
         <Text style={styles.headerSubtitle}>
           {teams.length} teams
         </Text>

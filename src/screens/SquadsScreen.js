@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,44 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
+import axios from 'axios';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { selectActiveLeague } from '../redux/sportsSlice';
 
 const SquadsScreen = ({ navigation }) => {
+  const activeLeague = useSelector(selectActiveLeague);
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [activeLeague.str]);
+
+  const fetchTeams = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(
+        `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${encodeURIComponent(activeLeague.str)}`
+      );
+      setTeams(response.data.teams || []);
+    } catch (err) {
+      setError('Failed to load teams');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTeamPress = (team) => {
+    navigation.navigate('Details', { team });
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <TouchableOpacity 
@@ -20,7 +53,7 @@ const SquadsScreen = ({ navigation }) => {
       </TouchableOpacity>
       <View style={styles.headerContent}>
         <Text style={styles.headerTitle}>Squad List</Text>
-        <Text style={styles.headerSubtitle}>Team rosters</Text>
+        <Text style={styles.headerSubtitle}>{activeLeague.name} rosters</Text>
       </View>
     </View>
   );
@@ -33,46 +66,70 @@ const SquadsScreen = ({ navigation }) => {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}>
           
-          <View style={styles.iconContainer}>
-            <View style={styles.iconCircle}>
-              <Icon name="users" size={60} color={COLORS.primary} />
+          <View style={styles.instructionSection}>
+            <View style={styles.iconContainer}>
+              <View style={styles.iconCircle}>
+                <Icon name="users" size={40} color={COLORS.primary} />
+              </View>
             </View>
-          </View>
-
-          <Text style={styles.title}>Squad Information</Text>
-          <Text style={styles.description}>
-            Please select a team from the Teams screen to view their complete squad list and player details.
-          </Text>
-
-          <View style={styles.featureList}>
-            <View style={styles.featureItem}>
-              <Icon name="check-circle" size={20} color={COLORS.success} />
-              <Text style={styles.featureText}>View complete team rosters</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Icon name="check-circle" size={20} color={COLORS.success} />
-              <Text style={styles.featureText}>Player positions and numbers</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Icon name="check-circle" size={20} color={COLORS.success} />
-              <Text style={styles.featureText}>Team formation details</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.navigateButton}
-            onPress={() => navigation.navigate('Teams')}>
-            <Icon name="shield" size={20} color={COLORS.white} />
-            <Text style={styles.navigateButtonText}>Go to Teams</Text>
-          </TouchableOpacity>
-
-          <View style={styles.infoCard}>
-            <Icon name="info" size={18} color={COLORS.primary} />
-            <Text style={styles.infoText}>
-              Squad information requires selecting a specific team first. 
-              Navigate to the Teams section to browse available teams.
+            <Text style={styles.title}>Select a Team</Text>
+            <Text style={styles.description}>
+              Choose a team below to view their complete squad roster and player details.
             </Text>
           </View>
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <Text style={styles.loadingText}>Loading teams...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Icon name="alert-circle" size={48} color={COLORS.error} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={fetchTeams}>
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.sectionTitle}>{activeLeague.name} Teams</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.teamsScrollContainer}>
+                {teams.map((team) => (
+                  <TouchableOpacity
+                    key={team.idTeam}
+                    style={styles.teamCard}
+                    onPress={() => handleTeamPress(team)}
+                    activeOpacity={0.8}>
+                    {team.strTeamBadge ? (
+                      <Image
+                        source={{ uri: team.strTeamBadge }}
+                        style={styles.teamBadge}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View style={styles.teamBadgePlaceholder}>
+                        <Icon name="shield" size={40} color={COLORS.textLight} />
+                      </View>
+                    )}
+                    <Text style={styles.teamName} numberOfLines={2}>
+                      {team.strTeam}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.infoCard}>
+                <Icon name="info" size={18} color={COLORS.primary} />
+                <Text style={styles.infoText}>
+                  Tap on any team to view their squad roster, player positions, and jersey numbers.
+                </Text>
+              </View>
+            </>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -115,81 +172,128 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    padding: SPACING.xl,
+    padding: SPACING.lg,
+  },
+  instructionSection: {
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: SPACING.lg,
   },
   iconContainer: {
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: `${COLORS.primary}15`,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: `${COLORS.primary}30`,
   },
-  title: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.text,
-    marginBottom: SPACING.md,
-    textAlign: 'center',
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.xl * 2,
   },
-  description: {
+  loadingText: {
+    marginTop: SPACING.md,
     fontSize: FONT_SIZES.md,
     color: COLORS.textLight,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: SPACING.xl,
-    paddingHorizontal: SPACING.md,
   },
-  featureList: {
-    width: '100%',
-    marginBottom: SPACING.xl,
-  },
-  featureItem: {
-    flexDirection: 'row',
+  errorContainer: {
+    flex: 1,
     alignItems: 'center',
-    marginBottom: SPACING.md,
-    paddingHorizontal: SPACING.lg,
+    justifyContent: 'center',
+    paddingVertical: SPACING.xl * 2,
   },
-  featureText: {
+  errorText: {
+    marginTop: SPACING.md,
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
-    marginLeft: SPACING.md,
-    fontWeight: FONT_WEIGHTS.medium,
+    color: COLORS.error,
+    textAlign: 'center',
   },
-  navigateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  retryButton: {
+    marginTop: SPACING.lg,
     backgroundColor: COLORS.primary,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
-    borderRadius: 12,
-    marginBottom: SPACING.xl,
-    elevation: 3,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    borderRadius: 8,
   },
-  navigateButtonText: {
+  retryButtonText: {
     color: COLORS.white,
     fontSize: FONT_SIZES.md,
     fontWeight: FONT_WEIGHTS.bold,
-    marginLeft: SPACING.sm,
   },
+  title: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: FONT_WEIGHTS.bold,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.md,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: FONT_WEIGHTS.bold,
+    color: COLORS.text,
+    marginBottom: SPACING.md,
+    marginTop: SPACING.lg,
+  },
+  teamsScrollContainer: {
+    paddingVertical: SPACING.md,
+    gap: SPACING.md,
+  },
+  teamCard: {
+    width: 120,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: SPACING.md,
+    marginRight: SPACING.md,
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  teamBadge: {
+    width: 70,
+    height: 70,
+    marginBottom: SPACING.sm,
+  },
+  teamBadgePlaceholder: {
+    width: 70,
+    height: 70,
+    marginBottom: SPACING.sm,
+    backgroundColor: COLORS.background,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamName: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.semibold,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+
   infoCard: {
     flexDirection: 'row',
     backgroundColor: `${COLORS.primary}10`,
-    padding: SPACING.lg,
+    padding: SPACING.md,
     borderRadius: 12,
     borderLeftWidth: 4,
     borderLeftColor: COLORS.primary,
+    marginTop: SPACING.xl,
   },
   infoText: {
     flex: 1,

@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { setActiveLeague, SUPPORTED_LEAGUES, selectActiveLeague } from '../redux/sportsSlice';
 
 const HomeScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const activeLeague = useSelector(selectActiveLeague);
 
   const menuCards = [
     {
@@ -49,12 +52,42 @@ const HomeScreen = ({ navigation }) => {
     },
   ];
 
+  const handleLeaguePress = (league) => {
+    dispatch(setActiveLeague(league));
+  };
+
+  const renderLeagueChips = () => (
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.leagueChipsContainer}
+      style={styles.leagueChipsScroll}>
+      {SUPPORTED_LEAGUES.map((league) => (
+        <TouchableOpacity
+          key={league.id}
+          style={[
+            styles.leagueChip,
+            activeLeague.id === league.id && styles.leagueChipActive
+          ]}
+          onPress={() => handleLeaguePress(league)}
+          activeOpacity={0.7}>
+          <Text style={[
+            styles.leagueChipText,
+            activeLeague.id === league.id && styles.leagueChipTextActive
+          ]}>
+            {league.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View>
         <Text style={styles.greeting}>Hello, {user?.firstName || 'User'}! 👋</Text>
         <Text style={styles.headerSubtitle}>
-          Welcome to your Sports Dashboard
+          Explore {activeLeague.name}
         </Text>
       </View>
     </View>
@@ -85,6 +118,7 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {renderHeader()}
+        {renderLeagueChips()}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -101,9 +135,9 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.infoCard}>
               <Icon name="info" size={20} color={COLORS.primary} />
               <View style={styles.infoContent}>
-                <Text style={styles.infoTitle}>Premier League Coverage</Text>
+                <Text style={styles.infoTitle}>{activeLeague.name} Coverage</Text>
                 <Text style={styles.infoText}>
-                  Access complete Premier League data including teams, fixtures, results, and more.
+                  Access complete {activeLeague.name} data including teams, fixtures, results, and more.
                 </Text>
               </View>
             </View>
@@ -138,6 +172,33 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     color: COLORS.white,
     opacity: 0.9,
+  },
+  leagueChipsScroll: {
+    backgroundColor: COLORS.primary,
+    maxHeight: 50,
+  },
+  leagueChipsContainer: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    gap: SPACING.sm,
+  },
+  leagueChip: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: SPACING.sm,
+  },
+  leagueChipActive: {
+    backgroundColor: COLORS.white,
+  },
+  leagueChipText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.semibold,
+    color: COLORS.white,
+  },
+  leagueChipTextActive: {
+    color: COLORS.primary,
   },
   scrollView: {
     flex: 1,
