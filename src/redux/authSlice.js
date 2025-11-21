@@ -84,7 +84,7 @@ export const loginUser = (credentials) => async (dispatch) => {
         user: {
           id: 1,
           username: 'admin',
-          email: 'admin@sportyx.com',
+          email: 'admin@sportx.com',
           firstName: 'Admin',
           lastName: 'User',
         },

@@ -75,7 +75,7 @@ const SignupScreen = ({ navigation }) => {
           </View>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>
-            Join SportyX and start your journey
+            Join SportX and start your journey
           </Text>
         </View>
 

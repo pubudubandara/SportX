@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -52,9 +53,12 @@ const LoginScreen = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Icon name="activity" size={50} color={COLORS.primary} />
+            <View style={styles.logoPlaceholder}>
+              <Text style={styles.logoText}>SPORT</Text>
+              <Text style={styles.logoTextOrange}>X</Text>
+            </View>
           </View>
-          <Text style={styles.title}>Welcome to SportyX</Text>
+          <Text style={styles.title}>Welcome to SportX</Text>
           <Text style={styles.subtitle}>
             Login to explore your favorite teams
           </Text>
@@ -160,10 +164,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.white,
+    width: 120,
+    height: 120,
+    borderRadius: 24,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -172,6 +176,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  logoPlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoText: {
+    fontSize: 24,
+    fontWeight: FONT_WEIGHTS.bold,
+    color: '#87CEEB',
+    letterSpacing: -1,
+  },
+  logoTextOrange: {
+    fontSize: 32,
+    fontWeight: FONT_WEIGHTS.bold,
+    color: '#FF8C42',
+    marginLeft: 2,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: FONT_SIZES.xxl,

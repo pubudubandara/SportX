@@ -50,7 +50,7 @@ const HomeScreen = ({ navigation }) => {
         </Text>
       </View>
       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-        <Icon name="log-out" size={24} color={COLORS.primary} />
+        <Icon name="log-out" size={24} color={COLORS.white} />
       </TouchableOpacity>
     </View>
   );
@@ -143,24 +143,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: SPACING.lg,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.primary,
+    borderBottomWidth: 0,
   },
   greeting: {
     fontSize: FONT_SIZES.xl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.text,
+    color: COLORS.white,
   },
   headerSubtitle: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textLight,
+    color: COLORS.white,
     marginTop: SPACING.xs,
+    opacity: 0.9,
   },
   logoutButton: {
     padding: SPACING.sm,
     borderRadius: 8,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   listContent: {
     paddingVertical: SPACING.sm,

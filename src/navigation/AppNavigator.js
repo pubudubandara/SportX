@@ -12,6 +12,10 @@ import SignupScreen from '../screens/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import DetailsScreen from '../screens/DetailsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+
+// Components
+import CustomTabBar from '../components/CustomTabBar';
 
 import { COLORS } from '../utils/constants';
 
@@ -92,43 +96,36 @@ const FavoritesStack = () => {
   );
 };
 
+// Profile Stack Navigator
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: COLORS.primary,
+        },
+        headerTintColor: COLORS.white,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}>
+      <Stack.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Tab Navigator
 const TabNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textLight,
-        tabBarStyle: {
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-          backgroundColor: COLORS.white,
-          borderTopWidth: 1,
-          borderTopColor: COLORS.border,
-          elevation: 8,
-          shadowColor: COLORS.cardShadow,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'Home') {
-            iconName = 'home';
-          } else if (route.name === 'Favorites') {
-            iconName = 'heart';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-      })}>
+      }}>
       <Tab.Screen
         name="Home"
         component={HomeStack}
@@ -141,6 +138,13 @@ const TabNavigator = () => {
         component={FavoritesStack}
         options={{
           tabBarLabel: 'Favorites',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{
+          tabBarLabel: 'Profile',
         }}
       />
     </Tab.Navigator>
