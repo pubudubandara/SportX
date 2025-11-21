@@ -26,8 +26,9 @@ const ResultsScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
+      const leagueId = activeLeague?.idLeague || activeLeague?.id || '4328';
       const response = await axios.get(
-        `https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=${activeLeague.id}`
+        `https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=${leagueId}`
       );
       setResults(response.data.events || []);
     } catch (err) {
@@ -38,8 +39,10 @@ const ResultsScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchResults();
-  }, [activeLeague.id]);
+    if (activeLeague) {
+      fetchResults();
+    }
+  }, [activeLeague?.idLeague, activeLeague?.id]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -65,7 +68,7 @@ const ResultsScreen = ({ navigation }) => {
         <Icon name="arrow-left" size={24} color={COLORS.white} />
       </TouchableOpacity>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>{activeLeague.name} Results</Text>
+        <Text style={styles.headerTitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} Results</Text>
         <Text style={styles.headerSubtitle}>
           {results.length} recent matches
         </Text>

@@ -22,15 +22,18 @@ const SquadsScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchTeams();
-  }, [activeLeague.str]);
+    if (activeLeague) {
+      fetchTeams();
+    }
+  }, [activeLeague?.idLeague, activeLeague?.str]);
 
   const fetchTeams = async () => {
     try {
       setLoading(true);
       setError(null);
+      const leagueName = activeLeague?.strLeague || activeLeague?.str || 'English Premier League';
       const response = await axios.get(
-        `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${encodeURIComponent(activeLeague.str)}`
+        `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${encodeURIComponent(leagueName)}`
       );
       setTeams(response.data.teams || []);
     } catch (err) {
@@ -53,7 +56,7 @@ const SquadsScreen = ({ navigation }) => {
       </TouchableOpacity>
       <View style={styles.headerContent}>
         <Text style={styles.headerTitle}>Squad List</Text>
-        <Text style={styles.headerSubtitle}>{activeLeague.name} rosters</Text>
+        <Text style={styles.headerSubtitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} rosters</Text>
       </View>
     </View>
   );
@@ -93,7 +96,7 @@ const SquadsScreen = ({ navigation }) => {
             </View>
           ) : (
             <>
-              <Text style={styles.sectionTitle}>{activeLeague.name} Teams</Text>
+              <Text style={styles.sectionTitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} Teams</Text>
               <ScrollView 
                 horizontal 
                 showsHorizontalScrollIndicator={false}

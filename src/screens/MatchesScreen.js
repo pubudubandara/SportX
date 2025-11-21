@@ -26,8 +26,9 @@ const MatchesScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
+      const leagueId = activeLeague?.idLeague || activeLeague?.id || '4328';
       const response = await axios.get(
-        `https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${activeLeague.id}`
+        `https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`
       );
       setMatches(response.data.events || []);
     } catch (err) {
@@ -38,8 +39,10 @@ const MatchesScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchMatches();
-  }, [activeLeague.id]);
+    if (activeLeague) {
+      fetchMatches();
+    }
+  }, [activeLeague?.idLeague, activeLeague?.id]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -64,7 +67,7 @@ const MatchesScreen = ({ navigation }) => {
         <Icon name="arrow-left" size={24} color={COLORS.white} />
       </TouchableOpacity>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>{activeLeague.name} Matches</Text>
+        <Text style={styles.headerTitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} Matches</Text>
         <Text style={styles.headerSubtitle}>
           {matches.length} fixtures scheduled
         </Text>

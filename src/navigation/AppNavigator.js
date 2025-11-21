@@ -10,6 +10,7 @@ import { restoreAuthState } from '../redux/authSlice';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
+import LeagueDashboard from '../screens/LeagueDashboard';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import DetailsScreen from '../screens/DetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -57,6 +58,14 @@ const HomeStack = () => {
         name="HomeMain"
         component={HomeScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LeagueDashboard"
+        component={LeagueDashboard}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
       />
       <Stack.Screen
         name="Teams"

@@ -31,11 +31,16 @@ const TeamsScreen = ({ navigation }) => {
 
   useEffect(() => {
     dispatch(loadFavorites());
-    dispatch(fetchTeams(activeLeague.str));
-  }, [dispatch, activeLeague.str]);
+    // Fetch teams using league ID
+    if (activeLeague?.idLeague) {
+      dispatch(fetchTeams(activeLeague.strLeague || activeLeague.str));
+    }
+  }, [dispatch, activeLeague?.idLeague]);
 
   const handleRefresh = () => {
-    dispatch(fetchTeams(activeLeague.str));
+    if (activeLeague?.idLeague) {
+      dispatch(fetchTeams(activeLeague.strLeague || activeLeague.str));
+    }
   };
 
   const renderHeader = () => (
