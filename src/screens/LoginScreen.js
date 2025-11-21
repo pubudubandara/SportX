@@ -23,7 +23,7 @@ const LoginSchema = Yup.object().shape({
     .min(3, 'Username must be at least 3 characters')
     .required('Username is required'),
   password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
+    .min(4, 'Password must be at least 4 characters')
     .required('Password is required'),
 });
 
@@ -134,8 +134,8 @@ const LoginScreen = ({ navigation }) => {
               {/* Demo Credentials */}
               <View style={styles.demoContainer}>
                 <Text style={styles.demoTitle}>Demo Credentials:</Text>
-                <Text style={styles.demoText}>Username: emilys</Text>
-                <Text style={styles.demoText}>Password: emilyspass</Text>
+                <Text style={styles.demoText}>Username: admin</Text>
+                <Text style={styles.demoText}>Password: admin</Text>
               </View>
             </View>
           )}

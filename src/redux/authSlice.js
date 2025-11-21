@@ -78,7 +78,33 @@ export const {
 export const loginUser = (credentials) => async (dispatch) => {
   dispatch(loginStart());
   try {
-    const response = await axios.post(API_ENDPOINTS.LOGIN, credentials);
+    // Check for admin credentials first
+    if (credentials.username === 'admin' && credentials.password === 'admin') {
+      const userData = {
+        user: {
+          id: 1,
+          username: 'admin',
+          email: 'admin@sportyx.com',
+          firstName: 'Admin',
+          lastName: 'User',
+        },
+        token: 'admin-token-' + Date.now(),
+      };
+
+      // Persist to AsyncStorage
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, userData.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData.user));
+
+      dispatch(loginSuccess(userData));
+      return;
+    }
+
+    // Try DummyJSON API for other credentials
+    const response = await axios.post(API_ENDPOINTS.LOGIN, credentials, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     
     const userData = {
       user: {
@@ -97,7 +123,8 @@ export const loginUser = (credentials) => async (dispatch) => {
 
     dispatch(loginSuccess(userData));
   } catch (error) {
-    const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+    console.log('Login error:', error.response?.data || error.message);
+    const errorMessage = error.response?.data?.message || 'Invalid username or password';
     dispatch(loginFailure(errorMessage));
     throw error;
   }
