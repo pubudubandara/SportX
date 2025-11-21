@@ -8,6 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
@@ -80,8 +81,17 @@ const MatchesScreen = ({ navigation }) => {
       
       <View style={styles.matchContent}>
         <View style={styles.teamContainer}>
-          <Text style={styles.teamName}>{item.strHomeTeam}</Text>
-          <Text style={styles.homeLabel}>HOME</Text>
+          {item.strHomeTeamBadge && (
+            <Image
+              source={{ uri: item.strHomeTeamBadge }}
+              style={styles.teamBadge}
+              resizeMode="contain"
+            />
+          )}
+          <View style={styles.teamInfo}>
+            <Text style={styles.teamName}>{item.strHomeTeam}</Text>
+            <Text style={styles.homeLabel}>HOME</Text>
+          </View>
         </View>
         
         <View style={styles.vsContainer}>
@@ -89,8 +99,17 @@ const MatchesScreen = ({ navigation }) => {
         </View>
         
         <View style={styles.teamContainer}>
-          <Text style={styles.teamName}>{item.strAwayTeam}</Text>
-          <Text style={styles.awayLabel}>AWAY</Text>
+          {item.strAwayTeamBadge && (
+            <Image
+              source={{ uri: item.strAwayTeamBadge }}
+              style={styles.teamBadge}
+              resizeMode="contain"
+            />
+          )}
+          <View style={styles.teamInfo}>
+            <Text style={styles.teamName}>{item.strAwayTeam}</Text>
+            <Text style={styles.awayLabel}>AWAY</Text>
+          </View>
         </View>
       </View>
 
@@ -258,6 +277,17 @@ const styles = StyleSheet.create({
   teamContainer: {
     flex: 1,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  teamBadge: {
+    width: 40,
+    height: 40,
+    marginRight: SPACING.sm,
+  },
+  teamInfo: {
+    alignItems: 'center',
+    flex: 1,
   },
   teamName: {
     fontSize: FONT_SIZES.md,

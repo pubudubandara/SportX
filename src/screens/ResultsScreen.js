@@ -8,6 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
@@ -88,6 +89,13 @@ const ResultsScreen = ({ navigation }) => {
         
         <View style={styles.resultContent}>
           <View style={[styles.teamResultContainer, resultStatus === 'home-win' && styles.winnerTeam]}>
+            {item.strHomeTeamBadge && (
+              <Image
+                source={{ uri: item.strHomeTeamBadge }}
+                style={styles.teamBadgeSmall}
+                resizeMode="contain"
+              />
+            )}
             <Text style={[styles.teamNameResult, resultStatus === 'home-win' && styles.winnerText]}>
               {item.strHomeTeam}
             </Text>
@@ -111,6 +119,13 @@ const ResultsScreen = ({ navigation }) => {
             <Text style={[styles.teamNameResult, resultStatus === 'away-win' && styles.winnerText]}>
               {item.strAwayTeam}
             </Text>
+            {item.strAwayTeamBadge && (
+              <Image
+                source={{ uri: item.strAwayTeamBadge }}
+                style={styles.teamBadgeSmall}
+                resizeMode="contain"
+              />
+            )}
           </View>
         </View>
 
@@ -288,6 +303,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  teamBadgeSmall: {
+    width: 32,
+    height: 32,
+    marginHorizontal: SPACING.xs,
   },
   winnerTeam: {
     opacity: 1,
