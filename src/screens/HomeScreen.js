@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.background,
+    
   },
   loadingText: {
     marginTop: SPACING.md,
@@ -145,6 +146,7 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     backgroundColor: COLORS.primary,
     borderBottomWidth: 0,
+    paddingTop: SPACING.xl *2
   },
   greeting: {
     fontSize: FONT_SIZES.xl,

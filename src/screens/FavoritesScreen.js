@@ -69,19 +69,20 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     padding: SPACING.lg,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.primary,
+    borderBottomWidth: 0,
+    paddingTop: SPACING.xl
   },
   greeting: {
     fontSize: FONT_SIZES.xl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.text,
+    color: COLORS.white,
   },
   headerSubtitle: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textLight,
+    color: COLORS.white,
     marginTop: SPACING.xs,
+    opacity: 0.9,
   },
   listContent: {
     paddingVertical: SPACING.sm,

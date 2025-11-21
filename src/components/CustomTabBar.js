@@ -60,13 +60,24 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             onPress={onPress}
             onLongPress={onLongPress}
             style={styles.tabButton}>
-            <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
-              <Icon
-                name={getIconName()}
-                size={24}
-                color={isFocused ? COLORS.white : COLORS.textLight}
-              />
+            
+            {/* Round background container */}
+            <View style={[
+              styles.iconBackground, 
+              isFocused && styles.activeIconBackground
+            ]}>
+              <View style={[
+                styles.iconContainer, 
+                isFocused && styles.activeIconContainer
+              ]}>
+                <Icon
+                  name={getIconName()}
+                  size={24}
+                  color={isFocused ? COLORS.white : COLORS.textLight}
+                />
+              </View>
             </View>
+            
             <Text style={[styles.label, isFocused && styles.activeLabel]}>
               {label}
             </Text>
@@ -97,16 +108,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: SPACING.xs,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  // Outer background for better visual effect
+  iconBackground: {
+    width: 56,
+    height: 56,
+    borderRadius: 56,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  activeIconBackground: {
+    backgroundColor: COLORS.primary + '20', // Adds 20% opacity background
+  },
+  // Inner icon container
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   activeIconContainer: {
     backgroundColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   label: {
     fontSize: FONT_SIZES.xs,
