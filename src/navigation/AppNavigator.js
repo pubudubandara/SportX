@@ -13,6 +13,10 @@ import HomeScreen from '../screens/HomeScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import DetailsScreen from '../screens/DetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import TeamsScreen from '../screens/TeamsScreen';
+import MatchesScreen from '../screens/MatchesScreen';
+import ResultsScreen from '../screens/ResultsScreen';
+import SquadsScreen from '../screens/SquadsScreen';
 
 // Components
 import CustomTabBar from '../components/CustomTabBar';
@@ -53,6 +57,38 @@ const HomeStack = () => {
         name="HomeMain"
         component={HomeScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Teams"
+        component={TeamsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Matches"
+        component={MatchesScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Results"
+        component={ResultsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Squads"
+        component={SquadsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
       />
       <Stack.Screen
         name="Details"

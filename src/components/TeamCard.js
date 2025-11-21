@@ -31,9 +31,9 @@ const TeamCard = ({ team, onPress }) => {
       <View style={styles.cardContent}>
         {/* Team Badge */}
         <View style={styles.imageContainer}>
-          {team.strTeamBadge ? (
+          {(team.strTeamBadge || team.strBadge) ? (
             <Image
-              source={{ uri: team.strTeamBadge }}
+              source={{ uri: team.strTeamBadge || team.strBadge }}
               style={styles.teamBadge}
               resizeMode="contain"
             />

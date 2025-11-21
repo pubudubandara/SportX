@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   Linking,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
+import axios from 'axios';
 import { toggleFavorite, selectIsFavorite } from '../redux/sportsSlice';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
@@ -20,6 +22,30 @@ const DetailsScreen = ({ route, navigation }) => {
   const { team } = route.params;
   const dispatch = useDispatch();
   const isFavorite = useSelector(selectIsFavorite(team.idTeam));
+  const [squad, setSquad] = useState([]);
+  const [loadingSquad, setLoadingSquad] = useState(true);
+
+  const primaryColor = team.strColour1 || COLORS.primary;
+  const secondaryColor = team.strColour2 || COLORS.white;
+  const tertiaryColor = team.strColour3 || COLORS.secondary;
+
+  useEffect(() => {
+    fetchSquad();
+  }, [team.idTeam]);
+
+  const fetchSquad = async () => {
+    try {
+      setLoadingSquad(true);
+      const response = await axios.get(
+        `https://www.thesportsdb.com/api/v1/json/3/lookup_all_players.php?id=${team.idTeam}`
+      );
+      setSquad(response.data.player || []);
+    } catch (error) {
+      console.error('Error fetching squad:', error);
+    } finally {
+      setLoadingSquad(false);
+    }
+  };
 
   const handleFavoriteToggle = () => {
     dispatch(toggleFavorite(team.idTeam));
@@ -53,15 +79,15 @@ const DetailsScreen = ({ route, navigation }) => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header Image */}
       <View style={styles.headerContainer}>
-        {team.strTeamBanner ? (
+        {team.strTeamBanner || team.strFanart1 ? (
           <Image
-            source={{ uri: team.strTeamBanner }}
+            source={{ uri: team.strTeamBanner || team.strFanart1 }}
             style={styles.bannerImage}
             resizeMode="cover"
           />
         ) : (
-          <View style={[styles.bannerImage, styles.bannerPlaceholder]}>
-            <Icon name="image" size={40} color={COLORS.textLight} />
+          <View style={[styles.bannerImage, { backgroundColor: primaryColor }, styles.bannerPlaceholder]}>
+            <Icon name="image" size={40} color={secondaryColor} />
           </View>
         )}
         
@@ -123,12 +149,96 @@ const DetailsScreen = ({ route, navigation }) => {
         </View>
       </View>
 
+      {/* Team Colors */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Team Colors</Text>
+        <View style={styles.colorsContainer}>
+          {primaryColor && (
+            <View style={styles.colorItem}>
+              <View style={[styles.colorCircle, { backgroundColor: primaryColor }]} />
+              <Text style={styles.colorLabel}>Primary</Text>
+            </View>
+          )}
+          {secondaryColor && (
+            <View style={styles.colorItem}>
+              <View style={[styles.colorCircle, { backgroundColor: secondaryColor, borderWidth: 1, borderColor: COLORS.border }]} />
+              <Text style={styles.colorLabel}>Secondary</Text>
+            </View>
+          )}
+          {tertiaryColor && (
+            <View style={styles.colorItem}>
+              <View style={[styles.colorCircle, { backgroundColor: tertiaryColor }]} />
+              <Text style={styles.colorLabel}>Tertiary</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Squad Section */}
+      <View style={styles.section}>
+        <View style={styles.squadHeader}>
+          <Icon name="users" size={24} color={primaryColor} />
+          <Text style={[styles.sectionTitle, { marginBottom: 0, marginLeft: SPACING.sm }]}>
+            Squad List
+          </Text>
+        </View>
+        
+        {loadingSquad ? (
+          <View style={styles.loadingSquad}>
+            <ActivityIndicator size="large" color={primaryColor} />
+            <Text style={styles.loadingText}>Loading squad...</Text>
+          </View>
+        ) : squad.length > 0 ? (
+          <View style={styles.squadGrid}>
+            {squad.slice(0, 20).map((player, index) => (
+              <View 
+                key={player.idPlayer || index} 
+                style={[styles.playerCard, { borderLeftColor: primaryColor }]}>
+                <View style={styles.playerInfo}>
+                  {player.strCutout ? (
+                    <Image
+                      source={{ uri: player.strCutout }}
+                      style={styles.playerImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.playerImagePlaceholder, { backgroundColor: `${primaryColor}20` }]}>
+                      <Icon name="user" size={24} color={primaryColor} />
+                    </View>
+                  )}
+                  <View style={styles.playerDetails}>
+                    <Text style={styles.playerName} numberOfLines={1}>
+                      {player.strPlayer}
+                    </Text>
+                    <Text style={styles.playerPosition}>
+                      {player.strPosition || 'Position N/A'}
+                    </Text>
+                    {player.strNumber && (
+                      <View style={[styles.playerNumber, { backgroundColor: primaryColor }]}>
+                        <Text style={styles.playerNumberText}>#{player.strNumber}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.noSquad}>
+            <Icon name="info" size={40} color={COLORS.textLight} />
+            <Text style={styles.noSquadText}>Squad information not available</Text>
+          </View>
+        )}
+      </View>
+
       {/* Website Button */}
       {team.strWebsite && (
-        <TouchableOpacity style={styles.websiteButton} onPress={openWebsite}>
-          <Icon name="globe" size={20} color={COLORS.primary} />
-          <Text style={styles.websiteButtonText}>Visit Website</Text>
-          <Icon name="external-link" size={16} color={COLORS.primary} />
+        <TouchableOpacity 
+          style={[styles.websiteButton, { borderColor: primaryColor }]} 
+          onPress={openWebsite}>
+          <Icon name="globe" size={20} color={primaryColor} />
+          <Text style={[styles.websiteButtonText, { color: primaryColor }]}>Visit Website</Text>
+          <Icon name="external-link" size={16} color={primaryColor} />
         </TouchableOpacity>
       )}
 
@@ -136,30 +246,30 @@ const DetailsScreen = ({ route, navigation }) => {
       <View style={styles.socialContainer}>
         {team.strFacebook && (
           <TouchableOpacity
-            style={styles.socialButton}
+            style={[styles.socialButton, { backgroundColor: `${primaryColor}15` }]}
             onPress={() => Linking.openURL(`https://${team.strFacebook}`)}>
-            <Icon name="facebook" size={24} color={COLORS.primary} />
+            <Icon name="facebook" size={24} color={primaryColor} />
           </TouchableOpacity>
         )}
         {team.strTwitter && (
           <TouchableOpacity
-            style={styles.socialButton}
+            style={[styles.socialButton, { backgroundColor: `${primaryColor}15` }]}
             onPress={() => Linking.openURL(`https://${team.strTwitter}`)}>
-            <Icon name="twitter" size={24} color={COLORS.primary} />
+            <Icon name="twitter" size={24} color={primaryColor} />
           </TouchableOpacity>
         )}
         {team.strInstagram && (
           <TouchableOpacity
-            style={styles.socialButton}
+            style={[styles.socialButton, { backgroundColor: `${primaryColor}15` }]}
             onPress={() => Linking.openURL(`https://${team.strInstagram}`)}>
-            <Icon name="instagram" size={24} color={COLORS.primary} />
+            <Icon name="instagram" size={24} color={primaryColor} />
           </TouchableOpacity>
         )}
         {team.strYoutube && (
           <TouchableOpacity
-            style={styles.socialButton}
+            style={[styles.socialButton, { backgroundColor: `${primaryColor}15` }]}
             onPress={() => Linking.openURL(`https://${team.strYoutube}`)}>
-            <Icon name="youtube" size={24} color={COLORS.primary} />
+            <Icon name="youtube" size={24} color={primaryColor} />
           </TouchableOpacity>
         )}
       </View>
@@ -323,6 +433,112 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  colorsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: SPACING.sm,
+  },
+  colorItem: {
+    alignItems: 'center',
+  },
+  colorCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: SPACING.xs,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  colorLabel: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHTS.medium,
+  },
+  squadHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  loadingSquad: {
+    paddingVertical: SPACING.xl,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textLight,
+  },
+  squadGrid: {
+    gap: SPACING.sm,
+  },
+  playerCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    padding: SPACING.md,
+    borderLeftWidth: 4,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  playerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  playerImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.background,
+  },
+  playerImagePlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playerDetails: {
+    flex: 1,
+    marginLeft: SPACING.md,
+  },
+  playerName: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: FONT_WEIGHTS.bold,
+    color: COLORS.text,
+    marginBottom: SPACING.xs / 2,
+  },
+  playerPosition: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textLight,
+    marginBottom: SPACING.xs,
+  },
+  playerNumber: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs / 2,
+    borderRadius: 12,
+  },
+  playerNumberText: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.white,
+    fontWeight: FONT_WEIGHTS.bold,
+  },
+  noSquad: {
+    paddingVertical: SPACING.xl,
+    alignItems: 'center',
+  },
+  noSquadText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textLight,
   },
   bottomSpacing: {
     height: SPACING.xl,
