@@ -46,7 +46,7 @@ const SquadsScreen = ({ navigation }) => {
   };
 
   const handleTeamPress = (team) => {
-    navigation.navigate('Details', { team });
+    navigation.navigate('TeamSquad', { team });
   };
 
   const renderHeader = () => (
@@ -86,7 +86,8 @@ const SquadsScreen = ({ navigation }) => {
           </View>
 
           {loading ? (
-            <View style={styles.content}>
+            <View>
+              <Text style={styles.sectionTitle}>Loading Teams...</Text>
               <TeamCardSkeleton />
               <TeamCardSkeleton />
               <TeamCardSkeleton />
@@ -104,10 +105,7 @@ const SquadsScreen = ({ navigation }) => {
           ) : (
             <>
               <Text style={styles.sectionTitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} Teams</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.teamsScrollContainer}>
+              <View style={styles.teamsContainer}>
                 {teams.map((team) => (
                   <TouchableOpacity
                     key={team.idTeam}
@@ -116,7 +114,7 @@ const SquadsScreen = ({ navigation }) => {
                     activeOpacity={0.8}>
                     {team.strTeamBadge ? (
                       <Image
-                        source={{ uri: `${team.strTeamBadge}/tiny` }}
+                        source={{ uri: team.strTeamBadge }}
                         style={styles.teamBadge}
                         resizeMode="contain"
                       />
@@ -125,18 +123,19 @@ const SquadsScreen = ({ navigation }) => {
                         <Icon name="shield" size={40} color={COLORS.textLight} />
                       </View>
                     )}
-                    <Text style={styles.teamName} numberOfLines={2}>
-                      {team.strTeam}
-                    </Text>
+                    <View style={styles.teamInfo}>
+                      <Text style={styles.teamName} numberOfLines={1}>
+                        {team.strTeam}
+                      </Text>
+                      {team.strStadium && (
+                        <Text style={styles.teamStadium} numberOfLines={1}>
+                          {team.strStadium}
+                        </Text>
+                      )}
+                    </View>
+                    <Icon name="chevron-right" size={20} color={COLORS.textLight} />
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
-
-              <View style={styles.infoCard}>
-                <Icon name="info" size={18} color={COLORS.primary} />
-                <Text style={styles.infoText}>
-                  Tap on any team to view their squad roster, player positions, and jersey numbers.
-                </Text>
               </View>
             </>
           )}
@@ -258,42 +257,49 @@ const createStyles = (COLORS) => StyleSheet.create({
     marginBottom: SPACING.md,
     marginTop: SPACING.lg,
   },
-  teamsScrollContainer: {
-    paddingVertical: SPACING.md,
-    gap: SPACING.md,
+  teamsContainer: {
+    gap: SPACING.sm,
   },
   teamCard: {
-    width: 120,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: SPACING.md,
-    marginRight: SPACING.md,
-    alignItems: 'center',
-    elevation: 3,
+    marginBottom: SPACING.sm,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
   },
   teamBadge: {
-    width: 70,
-    height: 70,
-    marginBottom: SPACING.sm,
+    width: 50,
+    height: 50,
+    marginRight: SPACING.md,
   },
   teamBadgePlaceholder: {
-    width: 70,
-    height: 70,
-    marginBottom: SPACING.sm,
+    width: 50,
+    height: 50,
+    marginRight: SPACING.md,
     backgroundColor: COLORS.background,
-    borderRadius: 35,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  teamInfo: {
+    flex: 1,
+    marginRight: SPACING.sm,
+  },
   teamName: {
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.md,
     fontWeight: FONT_WEIGHTS.semibold,
     color: COLORS.text,
-    textAlign: 'center',
+  },
+  teamStadium: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textLight,
+    marginTop: SPACING.xs,
   },
 
   infoCard: {

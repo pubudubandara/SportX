@@ -78,6 +78,7 @@ export const TeamCardSkeleton = () => {
         <SkeletonLoader width="70%" height={18} borderRadius={4} />
         <SkeletonLoader width="50%" height={14} borderRadius={4} style={{ marginTop: 6 }} />
       </View>
+      <SkeletonLoader width={20} height={20} borderRadius={10} />
     </View>
   );
 };

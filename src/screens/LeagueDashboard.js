@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
+import axios from 'axios';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { selectActiveLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
@@ -18,6 +20,28 @@ const LeagueDashboard = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
   const isDarkMode = useSelector(selectIsDarkMode);
   const COLORS = getColors(isDarkMode);
+  const [teams, setTeams] = useState([]);
+  const [loadingTeams, setLoadingTeams] = useState(true);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [activeLeague]);
+
+  const fetchTeams = async () => {
+    try {
+      setLoadingTeams(true);
+      const leagueName = activeLeague?.strLeague || 'English Premier League';
+      const response = await axios.get(
+        `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${encodeURIComponent(leagueName)}`
+      );
+      setTeams(response.data.teams || []);
+    } catch (err) {
+      console.error('Failed to load teams:', err);
+      setTeams([]);
+    } finally {
+      setLoadingTeams(false);
+    }
+  };
 
   const menuItems = [
     {
@@ -123,18 +147,55 @@ const LeagueDashboard = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Info Card */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Icon name="info" size={20} color={COLORS.primary} />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>About {activeLeague?.strLeague}</Text>
-              <Text style={styles.infoText}>
-                Access complete league data including team standings, match schedules, 
-                results, and squad information.
-              </Text>
-            </View>
+        {/* Teams Preview Section */}
+        <View style={styles.teamsSection}>
+          <View style={styles.teamsSectionHeader}>
+            <Text style={styles.sectionTitle}>League Teams</Text>
+            <TouchableOpacity 
+              style={styles.viewAllButton}
+              onPress={() => navigation.navigate('Teams')}>
+              <Text style={styles.viewAllText}>View All</Text>
+              <Icon name="chevron-right" size={16} color={COLORS.primary} />
+            </TouchableOpacity>
           </View>
+          
+          {loadingTeams ? (
+            <View style={styles.teamsLoadingContainer}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : teams.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.teamsScrollContainer}>
+              {teams.slice(0, 10).map((team) => (
+                <TouchableOpacity
+                  key={team.idTeam}
+                  style={styles.teamItem}
+                  onPress={() => navigation.navigate('Details', { team })}
+                  activeOpacity={0.8}>
+                  {team.strTeamBadge ? (
+                    <Image
+                      source={{ uri: team.strTeamBadge }}
+                      style={styles.teamLogo}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View style={styles.teamLogoPlaceholder}>
+                      <Icon name="shield" size={30} color={COLORS.textLight} />
+                    </View>
+                  )}
+                  <Text style={styles.teamItemName} numberOfLines={2}>
+                    {team.strTeam}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.teamsEmptyContainer}>
+              <Text style={styles.teamsEmptyText}>No teams found</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -285,6 +346,76 @@ const createStyles = (COLORS) => StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     color: COLORS.textLight,
     lineHeight: 20,
+  },
+  teamsSection: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  teamsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+  },
+  viewAllText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHTS.semibold,
+    marginRight: SPACING.xs,
+  },
+  teamsLoadingContainer: {
+    paddingVertical: SPACING.xl,
+    alignItems: 'center',
+  },
+  teamsScrollContainer: {
+    paddingRight: SPACING.lg,
+  },
+  teamItem: {
+    width: 90,
+    alignItems: 'center',
+    marginRight: SPACING.md,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: SPACING.sm,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  teamLogo: {
+    width: 60,
+    height: 60,
+    marginBottom: SPACING.xs,
+  },
+  teamLogoPlaceholder: {
+    width: 60,
+    height: 60,
+    marginBottom: SPACING.xs,
+    backgroundColor: COLORS.background,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamItemName: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.text,
+    textAlign: 'center',
+    fontWeight: FONT_WEIGHTS.medium,
+  },
+  teamsEmptyContainer: {
+    paddingVertical: SPACING.xl,
+    alignItems: 'center',
+  },
+  teamsEmptyText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textLight,
   },
 });
 

@@ -19,6 +19,7 @@ import MatchesScreen from '../screens/MatchesScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import SquadsScreen from '../screens/SquadsScreen';
 import ChatbotScreen from '../screens/ChatbotScreen';
+import TeamSquadScreen from '../screens/TeamSquadScreen';
 
 // Components
 import CustomTabBar from '../components/CustomTabBar';
@@ -109,6 +110,14 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen
+        name="TeamSquad"
+        component={TeamSquadScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
         name="Chatbot"
         component={ChatbotScreen}
         options={{
@@ -181,6 +190,14 @@ const FavoritesStack = () => {
       <Stack.Screen
         name="Details"
         component={DetailsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="TeamSquad"
+        component={TeamSquadScreen}
         options={{
           headerShown: false,
           animation: 'slide_from_right',

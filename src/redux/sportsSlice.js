@@ -12,6 +12,7 @@ const DEFAULT_LEAGUE = {
 const initialState = {
   activeLeague: DEFAULT_LEAGUE,
   favoriteLeagues: [],
+  selectedCountry: 'England',
 };
 
 const sportsSlice = createSlice({
@@ -30,13 +31,17 @@ const sportsSlice = createSlice({
         state.favoriteLeagues.push(leagueId);
       }
     },
+    setSelectedCountry: (state, action) => {
+      state.selectedCountry = action.payload;
+    },
   },
 });
 
-export const { setActiveLeague, toggleFavoriteLeague } = sportsSlice.actions;
+export const { setActiveLeague, toggleFavoriteLeague, setSelectedCountry } = sportsSlice.actions;
 
 // Selectors
 export const selectActiveLeague = (state) => state.sports.activeLeague;
 export const selectFavoriteLeagues = (state) => state.sports.favoriteLeagues;
+export const selectSelectedCountry = (state) => state.sports.selectedCountry;
 
 export default sportsSlice.reducer;

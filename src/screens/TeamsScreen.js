@@ -7,8 +7,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';

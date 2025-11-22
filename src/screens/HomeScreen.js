@@ -18,7 +18,7 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
+import { setActiveLeague, toggleFavoriteLeague, setSelectedCountry as setSelectedCountryRedux, selectSelectedCountry } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
 import { getColors } from '../utils/constants';
 import { HomeScreenSkeleton } from '../components/SkeletonLoader';
@@ -52,12 +52,13 @@ const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector(state => state.auth.user);
   const isDarkMode = useSelector(selectIsDarkMode);
+  const selectedCountry = useSelector(selectSelectedCountry);
   const COLORS = getColors(isDarkMode);
 
   // --- STATE ---
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('England');
+  const [displayCountry, setDisplayCountry] = useState(selectedCountry || 'England');
 
   const [leagues, setLeagues] = useState([]);
 
@@ -70,6 +71,11 @@ const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [viewableItems, setViewableItems] = useState([]);
+
+  // Sync displayCountry with Redux selectedCountry
+  useEffect(() => {
+    setDisplayCountry(selectedCountry || 'England');
+  }, [selectedCountry]);
 
   // 1. Fetch Countries
   useEffect(() => {
@@ -95,11 +101,12 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         setRefreshingLeagues(true);
 
         // A. Fetch Leagues
         const searchRes = await axios.get(
-          `https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=${selectedCountry}`,
+          `https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=${displayCountry}`,
         );
 
         if (searchRes.data.countries || searchRes.data.leagues) {
@@ -157,10 +164,8 @@ const HomeScreen = ({ navigation }) => {
       }
     };
 
-    if (selectedCountry) {
-      fetchData();
-    }
-  }, [selectedCountry]);
+    fetchData();
+  }, [displayCountry]);
 
   const fetchMatches = async leagueId => {
     try {
@@ -196,7 +201,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleCountrySelect = countryName => {
-    setSelectedCountry(countryName);
+    setDisplayCountry(countryName);
     setSearchQuery('');
     setFilteredCountries(countries);
     Keyboard.dismiss();
@@ -247,7 +252,7 @@ const HomeScreen = ({ navigation }) => {
       >
         {filteredCountries.length > 0 ? (
           filteredCountries.map((country, index) => {
-            const isSelected = selectedCountry === country.name_en;
+            const isSelected = displayCountry === country.name_en;
             return (
               <TouchableOpacity
                 key={index}
@@ -419,7 +424,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.statusRow}>
                 <Text style={styles.sectionTitle}>
                   Top Leagues in{' '}
-                  <Text style={{ color: '#3663b1' }}>{selectedCountry}</Text>
+                  <Text style={{ color: '#3663b1' }}>{displayCountry}</Text>
                 </Text>
                 {refreshingLeagues && (
                   <ActivityIndicator size="small" color="#3663b1" />
