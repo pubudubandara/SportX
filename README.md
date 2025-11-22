@@ -1,4 +1,79 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# SportX
+
+SportX is a React Native app (React Native CLI) for browsing sports leagues, teams, matches and chatting with an integrated Gemini-powered chatbot enriched with TheSportsDB live data.
+
+**Quick test credentials**
+- **Username:** `admin`
+- **Password:** `admin`
+
+**Important:** Do NOT commit your `.env` file. The repository should include `.env` in `.gitignore`.
+
+## Requirements
+- Node.js (LTS recommended)
+- Yarn or npm
+- React Native CLI toolchain (Android SDK / Xcode for iOS)
+
+## Install dependencies
+Using `yarn`:
+```
+yarn install
+```
+Or using `npm`:
+```
+npm install
+```
+
+## Environment variables
+Create a `.env` file in the project root (this file must NOT be committed). At minimum provide the Gemini API key used by the app:
+
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+# Example: GEMINI_API_KEY=ya29... (keep secret)
+```
+
+The app will pick up `GEMINI_API_KEY` from your `.env` at runtime. Ensure `.env` is listed in `.gitignore`.
+
+## Running the app (Android)
+Open a PowerShell terminal and run:
+
+```powershell
+npx react-native start
+npx react-native run-android
+```
+
+## Running the app (iOS)
+From macOS with Xcode installed:
+
+```bash
+npx react-native start
+npx react-native run-ios
+```
+
+## Run tests
+```
+npm test
+```
+or
+```
+yarn test
+```
+
+## Gemini Chatbot setup notes
+- This app uses the Gemini HTTP API. Put your API key into the `.env` file as shown above.
+- Keep the key private and do not push `.env` to version control.
+
+## Useful info for developers
+- Default selected country: `England` if no country is selected in Profile.
+- The Profile screen is the place to change the application-wide selected country (persisted to the app store).
+- Team/league images are loaded from TheSportsDB; if large images fail, verify network and fallback placeholders in the UI.
+
+## Contributing
+- Open a branch from `chatbot` or `main` for feature work.
+- Follow existing code style and theming patterns (use `getColors`/`createStyles` where used).
+
+## Troubleshooting
+- If you see issues with the Gemini integration, verify `GEMINI_API_KEY` in your `.env` and check the app's network logs.
+- If SafeArea warnings appear, ensure `react-native-safe-area-context` is installed and imports are from that package.
 
 # Getting Started
 
