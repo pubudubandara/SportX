@@ -135,7 +135,7 @@ const FavoritesScreen = ({ navigation }) => {
 const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
