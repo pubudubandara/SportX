@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   StatusBar,
   Animated,
-  Easing
+  Easing,
+  Keyboard
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,14 +21,13 @@ import axios from 'axios';
 import { setActiveLeague } from '../redux/sportsSlice';
 
 const { width } = Dimensions.get('window');
-const CARD_HEIGHT = 220;
 const PADDING = 15;
-const CARD_WIDTH = width - (PADDING * 2); 
+// Adjusted sizes for horizontal layout
+const LEAGUE_CARD_WIDTH = width * 0.75; 
+const LEAGUE_CARD_HEIGHT = 180;
 
-// --- IMAGE OPTIMIZATION HELPER ---
 const getOptimizedImage = (url, type = 'original') => {
   if (!url || url.includes('via.placeholder') || url.includes('transparenttextures')) return url;
-  
   switch (type) {
     case 'tiny': return `${url}/tiny`;   
     case 'small': return `${url}/small`;  
@@ -42,26 +42,31 @@ const HomeScreen = ({ navigation }) => {
   
   // --- STATE ---
   const [countries, setCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('England'); // Default
+  const [filteredCountries, setFilteredCountries] = useState([]); 
+  const [selectedCountry, setSelectedCountry] = useState('England'); 
+  
   const [leagues, setLeagues] = useState([]); 
+  
+  // Match Data State
+  const [todaysMatches, setTodaysMatches] = useState([]);
+  const [upcomingMatches, setUpcomingMatches] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [refreshingLeagues, setRefreshingLeagues] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Viewability
   const [viewableItems, setViewableItems] = useState([]);
 
-  // 1. Fetch All Countries on Mount
+  // 1. Fetch Countries
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const response = await axios.get('https://www.thesportsdb.com/api/v1/json/3/all_countries.php');
-        // Sort alphabetically and filter out non-standard entries if needed
         const sortedCountries = response.data.countries
           .sort((a, b) => a.name_en.localeCompare(b.name_en));
         
         setCountries(sortedCountries);
+        setFilteredCountries(sortedCountries); 
       } catch (error) {
         console.error("Error fetching countries:", error);
       }
@@ -69,30 +74,20 @@ const HomeScreen = ({ navigation }) => {
     fetchCountries();
   }, []);
 
-  // 2. Fetch Leagues when Country Changes
+  // 2. Fetch Leagues & Matches when Country Changes
   useEffect(() => {
-    const fetchLeaguesByCountry = async () => {
+    const fetchData = async () => {
       try {
         setRefreshingLeagues(true);
         
-        // Step A: Get all leagues for the country
+        // A. Fetch Leagues
         const searchRes = await axios.get(`https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=${selectedCountry}`);
         
-        if (searchRes.data.countries) { // API returns 'countries' key for league search sometimes, or 'leagues'
-           // TheSportsDB generic search returns 'countries' array for leagues sometimes? 
-           // Actually for search_all_leagues it usually returns "countries" object which is confusing, 
-           // OR it might return null if no leagues. Let's handle standard 'leagues' check.
-           // Correction: The endpoint search_all_leagues.php?c=England returns key "countries" (historical quirk) or "leagues".
+        if (searchRes.data.countries || searchRes.data.leagues) { 
            const rawLeagues = searchRes.data.countries || searchRes.data.leagues || [];
-
-           // Step B: Filter specific sports to avoid noise (Optional, but recommended)
-           // We stick to major sports to avoid "Amateur Chess in England" cluttering UI
-           const MAJOR_SPORTS = ['Soccer', 'Basketball', 'Cricket', 'Motorsport', 'Rugby', 'Ice Hockey', 'American Football', 'Baseball', 'Fighting'];
+           const MAJOR_SPORTS = ['Soccer', 'Basketball', 'Cricket', 'Motorsport', 'Rugby', 'Ice Hockey', 'American Football', 'Baseball', 'Fighting', 'Golf', 'Tennis'];
            const filteredRaw = rawLeagues.filter(l => MAJOR_SPORTS.includes(l.strSport));
-
-           // Step C: Hydrate Top 10 Results (Fetch details to get Fanart/Images)
-           // We limit to 10 to prevent rate limiting
-           const topLeagues = filteredRaw.slice(0, 10);
+           const topLeagues = filteredRaw.slice(0, 8); // Get top 8 for horizontal scroll
            
            const detailPromises = topLeagues.map(l => 
              axios.get(`https://www.thesportsdb.com/api/v1/json/3/lookupleague.php?id=${l.idLeague}`)
@@ -104,12 +99,23 @@ const HomeScreen = ({ navigation }) => {
              .filter(item => item !== null);
 
            setLeagues(cleanLeagues);
+
+           // B. Fetch Matches for the #1 League in this country
+           if (cleanLeagues.length > 0) {
+             fetchMatches(cleanLeagues[0].idLeague);
+           } else {
+             setTodaysMatches([]);
+             setUpcomingMatches([]);
+           }
+
         } else {
            setLeagues([]);
+           setTodaysMatches([]);
+           setUpcomingMatches([]);
         }
 
       } catch (error) {
-        console.error("Error fetching leagues for country:", error);
+        console.error("Error fetching data:", error);
         setLeagues([]);
       } finally {
         setRefreshingLeagues(false);
@@ -118,29 +124,54 @@ const HomeScreen = ({ navigation }) => {
     };
 
     if (selectedCountry) {
-      fetchLeaguesByCountry();
+      fetchData();
     }
   }, [selectedCountry]);
+
+  const fetchMatches = async (leagueId) => {
+    try {
+      const res = await axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`);
+      const events = res.data.events || [];
+      
+      // Filter Today vs Upcoming
+      // Note: Date format from API is usually YYYY-MM-DD
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      const today = events.filter(e => e.dateEvent === todayStr);
+      const upcoming = events.filter(e => e.dateEvent !== todayStr);
+      
+      setTodaysMatches(today);
+      setUpcomingMatches(upcoming);
+    } catch (e) {
+      console.log("No matches found");
+    }
+  };
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    if (text) {
+      const filtered = countries.filter(c => 
+        c.name_en.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredCountries(filtered);
+    } else {
+      setFilteredCountries(countries);
+    }
+  };
+
+  const handleCountrySelect = (countryName) => {
+    setSelectedCountry(countryName);
+    setSearchQuery(''); 
+    setFilteredCountries(countries); 
+    Keyboard.dismiss();
+  };
 
   const handleLeaguePress = (league) => {
     dispatch(setActiveLeague(league));
     navigation.navigate('LeagueDashboard');
   };
 
-  // Search within the currently displayed leagues
-  const filteredLeagues = leagues.filter(l => 
-    l.strLeague.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.strSport.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const onViewableItemsChanged = useCallback(({ viewableItems }) => {
-    const visibleIds = viewableItems.map(item => item.item.idLeague);
-    setViewableItems(visibleIds);
-  }, []);
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
-
-  // --- SUB-COMPONENTS ---
+  // --- COMPONENTS ---
 
   const Header = () => (
     <View style={styles.headerContainer}>
@@ -162,89 +193,84 @@ const HomeScreen = ({ navigation }) => {
 
   const CountrySelector = () => (
     <View style={styles.countrySection}>
-      <Text style={styles.sectionTitleSmall}>Select Country</Text>
+      <Text style={styles.sectionTitleSmall}>
+        {searchQuery ? 'Search Results' : 'Browse by Country'}
+      </Text>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false} 
         contentContainerStyle={{ paddingHorizontal: 15 }}
+        keyboardShouldPersistTaps="handled"
       >
-        {countries.map((country, index) => {
-          const isSelected = selectedCountry === country.name_en;
-          return (
-            <TouchableOpacity 
-              key={index} 
-              onPress={() => setSelectedCountry(country.name_en)}
-              style={[styles.countryChip, isSelected && styles.countryChipActive]}
-            >
-              <Text style={[styles.countryText, isSelected && styles.countryTextActive]}>
-                {country.name_en}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {filteredCountries.length > 0 ? (
+          filteredCountries.map((country, index) => {
+            const isSelected = selectedCountry === country.name_en;
+            return (
+              <TouchableOpacity 
+                key={index} 
+                onPress={() => handleCountrySelect(country.name_en)}
+                style={[styles.countryChip, isSelected && styles.countryChipActive]}
+              >
+                <Text style={[styles.countryText, isSelected && styles.countryTextActive]}>
+                  {country.name_en}
+                </Text>
+              </TouchableOpacity>
+            );
+          })
+        ) : (
+          <Text style={{ color: '#999', fontStyle: 'italic', marginTop: 10 }}>No countries found</Text>
+        )}
       </ScrollView>
     </View>
   );
 
-  const LeagueCard = React.memo(({ league, onPress, isVisible }) => {
+  const LeagueCardHorizontal = ({ league, onPress }) => {
     const images = [league.strFanart1, league.strFanart2, league.strFanart3, league.strFanart4]
       .filter(img => img)
       .map(img => getOptimizedImage(img, 'preview'));
 
-    const finalImages = images.length > 0 ? images : ['https://via.placeholder.com/400x200/3663b1/ffffff?text=No+Image'];
-    const translateX = useRef(new Animated.Value(0)).current;
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const intervalDuration = useRef(Math.floor(Math.random() * 3000) + 3000).current;
-
-    useEffect(() => {
-      if (!isVisible || finalImages.length <= 1) return;
-      const interval = setInterval(() => {
-        let nextIndex = currentIndex + 1;
-        if (nextIndex >= finalImages.length) nextIndex = 0; 
-        Animated.timing(translateX, {
-          toValue: -nextIndex * CARD_WIDTH,
-          duration: 800,
-          useNativeDriver: true,
-          easing: Easing.inOut(Easing.ease)
-        }).start();
-        setCurrentIndex(nextIndex);
-      }, intervalDuration);
-      return () => clearInterval(interval);
-    }, [currentIndex, finalImages.length, isVisible, intervalDuration]);
+    const bgImage = images.length > 0 ? images[0] : 'https://via.placeholder.com/400x200/3663b1/ffffff?text=No+Image';
 
     return (
-      <TouchableOpacity style={styles.cardContainer} activeOpacity={0.95} onPress={() => onPress(league)}>
-        <Animated.View 
-          style={{
-            flexDirection: 'row',
-            width: CARD_WIDTH * finalImages.length,
-            height: '100%',
-            transform: [{ translateX }]
-          }}
-        >
-          {finalImages.map((img, index) => (
-            <Image key={index} source={{ uri: img }} style={{ width: CARD_WIDTH, height: '100%' }} resizeMode="cover" />
-          ))}
-        </Animated.View>
+      <TouchableOpacity style={styles.leagueCardH} activeOpacity={0.9} onPress={() => onPress(league)}>
+        <Image source={{ uri: bgImage }} style={styles.cardBg} resizeMode="cover" />
         <View style={styles.cardOverlay} />
         <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Image source={{ uri: getOptimizedImage(league.strBadge, 'tiny') }} style={styles.leagueBadge} resizeMode="contain" />
-            <View style={styles.sportBadge}>
-              <Text style={styles.sportBadgeText}>{league.strSport}</Text>
-            </View>
+          <View style={styles.cardTopRow}>
+             <View style={styles.sportBadge}>
+                <Text style={styles.sportBadgeText}>{league.strSport}</Text>
+             </View>
+             <Image source={{ uri: getOptimizedImage(league.strBadge, 'tiny') }} style={styles.leagueBadgeSmall} resizeMode="contain" />
           </View>
-          <Text style={styles.leagueName}>{league.strLeague}</Text>
+          <Text style={styles.leagueNameH} numberOfLines={2}>{league.strLeague}</Text>
         </View>
       </TouchableOpacity>
     );
-  });
+  };
+
+  const MatchCard = ({ match, isToday }) => (
+    <View style={[styles.matchCard, isToday && styles.matchCardToday]}>
+      {isToday && (
+        <View style={styles.liveBadge}>
+          <Text style={styles.liveText}>TODAY</Text>
+        </View>
+      )}
+      <View style={styles.matchRow}>
+        <Text style={styles.matchTeam} numberOfLines={1}>{match.strHomeTeam}</Text>
+        <Text style={styles.vsText}>VS</Text>
+        <Text style={styles.matchTeam} numberOfLines={1}>{match.strAwayTeam}</Text>
+      </View>
+      <View style={styles.matchFooter}>
+        <Text style={styles.matchDate}>{match.dateEvent}</Text>
+        <Text style={styles.matchTime}>{match.strTime ? match.strTime.substring(0,5) : 'TBD'}</Text>
+      </View>
+    </View>
+  );
 
   if (loading && leagues.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3663b1" />
-        <Text style={{ marginTop: 10, color: '#666' }}>Loading Countries...</Text>
       </View>
     );
   }
@@ -254,65 +280,79 @@ const HomeScreen = ({ navigation }) => {
       <StatusBar backgroundColor="#f8f9fa" barStyle="dark-content" />
       <Header />
 
+      {/* Use FlatList to render Upcoming Matches vertically, everything else is in Header */}
       <FlatList
-        data={filteredLeagues}
-        keyExtractor={(item) => item.idLeague}
+        data={upcomingMatches}
+        keyExtractor={(item) => item.idEvent}
         showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        removeClippedSubviews={true}
+        contentContainerStyle={{ paddingBottom: 30 }}
         
         ListHeaderComponent={
           <>
+            {/* Search & Country */}
             <View style={styles.searchWrapper}>
               <View style={styles.searchContainer}>
                 <Feather name="search" size={20} color="#888" />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder={`Search in ${selectedCountry}...`}
+                  placeholder="Find Country..."
                   placeholderTextColor="#999"
                   value={searchQuery}
-                  onChangeText={setSearchQuery}
+                  onChangeText={handleSearch}
                 />
               </View>
             </View>
-
-            {/* 1. Country Selector Strip */}
             <CountrySelector />
 
-            {/* 2. Status Indicator */}
-            <View style={styles.statusRow}>
-              <Text style={styles.sectionTitle}>
-                Top Leagues in <Text style={{color: '#3663b1'}}>{selectedCountry}</Text>
-              </Text>
-              {refreshingLeagues && <ActivityIndicator size="small" color="#3663b1" />}
+            {/* Horizontal Leagues */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.statusRow}>
+                <Text style={styles.sectionTitle}>
+                  Top Leagues in <Text style={{color: '#3663b1'}}>{selectedCountry}</Text>
+                </Text>
+                {refreshingLeagues && <ActivityIndicator size="small" color="#3663b1" />}
+              </View>
+              
+              {leagues.length > 0 ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
+                  {leagues.map(league => (
+                    <LeagueCardHorizontal key={league.idLeague} league={league} onPress={handleLeaguePress} />
+                  ))}
+                </ScrollView>
+              ) : (
+                !refreshingLeagues && (
+                  <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>No leagues found.</Text>
+                  </View>
+                )
+              )}
             </View>
+
+            {/* Today's Matches (Horizontal Strip) */}
+            {todaysMatches.length > 0 && (
+              <View style={styles.sectionContainer}>
+                <Text style={[styles.sectionTitle, { marginLeft: 15 }]}>Today's Matches</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 10 }}>
+                  {todaysMatches.map(match => (
+                    <MatchCard key={match.idEvent} match={match} isToday={true} />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Upcoming Matches Title */}
+            <Text style={[styles.sectionTitle, { marginLeft: 15, marginTop: 10, marginBottom: 10 }]}>Upcoming Matches</Text>
+            {upcomingMatches.length === 0 && !refreshingLeagues && (
+               <Text style={{ marginLeft: 15, color: '#999', fontStyle: 'italic' }}>No upcoming matches scheduled.</Text>
+            )}
           </>
         }
-        
+
         renderItem={({ item }) => (
-          <View style={styles.cardWrapper}>
-             <LeagueCard 
-               league={item} 
-               onPress={handleLeaguePress} 
-               isVisible={viewableItems.includes(item.idLeague)} 
-             />
+          <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
+            <MatchCard match={item} isToday={false} />
           </View>
         )}
-        
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            {!refreshingLeagues ? (
-              <>
-                <Feather name="map" size={40} color="#ccc" />
-                <Text style={styles.emptyText}>No major leagues found for {selectedCountry}.</Text>
-                <Text style={styles.subEmptyText}>Try selecting England, Spain, USA, or India.</Text>
-              </>
-            ) : (
-               <View style={{height: 200}} /> // Placeholder while loading
-            )}
-          </View>
-        }
-        contentContainerStyle={{ paddingBottom: 30 }}
       />
     </View>
   );
@@ -322,76 +362,55 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
-    backgroundColor: 'white',
-  },
+  // Header & Search
+  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50, backgroundColor: 'white' },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   logoCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#3663b1', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
   headerTitle: { fontSize: 20, fontWeight: '800', color: '#333', letterSpacing: 0.5 },
   profileImage: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#f0f0f0' },
   onlineBadge: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#2ecc71', position: 'absolute', bottom: 0, right: 0, borderWidth: 2, borderColor: 'white' },
-
   searchWrapper: { paddingHorizontal: 15, marginVertical: 15 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 15, height: 50, borderWidth: 1, borderColor: '#eee' },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333' },
 
-  // Country Selector Styles
+  // Country Selector
   countrySection: { marginBottom: 20 },
   sectionTitleSmall: { fontSize: 14, fontWeight: '600', color: '#888', marginLeft: 20, marginBottom: 10, textTransform: 'uppercase' },
-  countryChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#eee',
-    minWidth: 80,
-    alignItems: 'center'
-  },
+  countryChip: { paddingHorizontal: 18, paddingVertical: 10, backgroundColor: 'white', borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#eee', minWidth: 80, alignItems: 'center' },
   countryChipActive: { backgroundColor: '#3663b1', borderColor: '#3663b1' },
   countryText: { color: '#555', fontWeight: '600' },
   countryTextActive: { color: 'white' },
 
+  // Section Layout
+  sectionContainer: { marginBottom: 25 },
   statusRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, marginBottom: 15 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginRight: 10 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
 
-  // Card Styles
-  cardWrapper: { paddingHorizontal: PADDING },
-  cardContainer: {
-    height: CARD_HEIGHT,
-    marginBottom: 20,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: 'white',
-    elevation: 5,
-  },
-  cardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
-  cardContent: { flex: 1, padding: 20, justifyContent: 'space-between', position: 'absolute', bottom: 0, width: '100%', height: '100%' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', position: 'absolute', top: 20, left: 20, width: '100%' },
-  leagueBadge: { width: 50, height: 50 },
-  sportBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backdropFilter: 'blur(10px)', marginRight: 40 },
-  sportBadgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
-  leagueName: { color: 'white', fontSize: 24, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: { width: -1, height: 1 }, textShadowRadius: 10 },
+  // Horizontal League Card
+  leagueCardH: { width: LEAGUE_CARD_WIDTH, height: LEAGUE_CARD_HEIGHT, marginRight: 15, borderRadius: 15, overflow: 'hidden', backgroundColor: '#333' },
+  cardBg: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  cardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
+  cardContent: { flex: 1, padding: 15, justifyContent: 'space-between' },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  leagueBadgeSmall: { width: 40, height: 40 },
+  sportBadge: { backgroundColor: 'rgba(54, 99, 177, 0.8)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  sportBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  leagueNameH: { color: 'white', fontSize: 20, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: {width:-1, height:1}, textShadowRadius: 5 },
 
-  emptyState: { alignItems: 'center', marginTop: 50 },
-  emptyText: { color: '#333', marginTop: 10, fontSize: 16, fontWeight: 'bold' },
-  subEmptyText: { color: '#888', marginTop: 5, fontSize: 14 }
+  // Match Card
+  matchCard: { backgroundColor: 'white', borderRadius: 12, padding: 15, borderWidth: 1, borderColor: '#f0f0f0', marginBottom: 5 },
+  matchCardToday: { borderWidth: 1, borderColor: '#3663b1', minWidth: 260, marginRight: 15 }, // Special style for Today
+  liveBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#e74c3c', paddingHorizontal: 8, paddingVertical: 4, borderTopRightRadius: 11, borderBottomLeftRadius: 8 },
+  liveText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  matchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 },
+  matchTeam: { fontSize: 14, fontWeight: '700', color: '#333', flex: 1, textAlign: 'center' },
+  vsText: { fontSize: 12, color: '#999', fontWeight: 'bold', marginHorizontal: 10 },
+  matchFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 },
+  matchDate: { color: '#888', fontSize: 12 },
+  matchTime: { color: '#3663b1', fontWeight: 'bold', fontSize: 12 },
+
+  emptyBox: { paddingHorizontal: 15 },
+  emptyText: { color: '#999', fontStyle: 'italic' }
 });
 
 export default HomeScreen;
