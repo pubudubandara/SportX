@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  ScrollView
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -27,13 +26,33 @@ const ChatbotScreen = ({ navigation }) => {
   const [messages, setMessages] = useState([
     {
       id: '1',
-      text: 'Hello! I am your SportX Assistant. Ask me anything about cricket scores, football rules, or player stats!',
+      text: 'Hello! I am your SportX Assistant. I have access to live sports data. Ask me about today\'s scores, upcoming matches, or league standings!',
       sender: 'bot',
     },
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [leagueMap, setLeagueMap] = useState({}); // Stores "League Name" -> "ID"
   const flatListRef = useRef(null);
+
+  // 1. Initialize: Fetch All Leagues to build a dynamic ID map
+  useEffect(() => {
+    const initLeagues = async () => {
+      try {
+        const res = await axios.get('https://www.thesportsdb.com/api/v1/json/3/all_leagues.php');
+        const map = {};
+        if (res.data.leagues) {
+          res.data.leagues.forEach(l => {
+            map[l.strLeague] = l.idLeague;
+          });
+        }
+        setLeagueMap(map);
+      } catch (e) {
+        console.log("Failed to load league map", e);
+      }
+    };
+    initLeagues();
+  }, []);
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -50,37 +69,82 @@ const ChatbotScreen = ({ navigation }) => {
     Keyboard.dismiss();
 
     try {
-      // Fetch live sports data from TheSportsDB API
+      // --- STEP 1: GATHER LIVE SPORTS CONTEXT ---
       let sportsContext = '';
       try {
-        const sportsResponse = await axios.get(
-          'https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4328'
-        );
-        if (sportsResponse.data?.events) {
-          const upcomingMatches = sportsResponse.data.events.slice(0, 3);
-          sportsContext = `\n\nLive Sports Context (recent Premier League matches): ${JSON.stringify(upcomingMatches.map(m => ({
-            event: m.strEvent,
-            date: m.dateEvent,
-            league: m.strLeague
-          })))}`;
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        
+        // Resolve IDs dynamically using the map (fallback to defaults if map not ready)
+        const eplId = leagueMap['English Premier League'] || '4328';
+        const laLigaId = leagueMap['Spanish La Liga'] || '4335';
+        const serieAId = leagueMap['Italian Serie A'] || '4332';
+        const bundesligaId = leagueMap['German Bundesliga'] || '4331';
+        const nbaId = leagueMap['NBA'] || '4387';
+        const iplId = leagueMap['Indian Premier League'] || '4436';
+
+        // Parallel API Calls
+        const [todayEvents, premierLeague, laLiga, serieA, bundesliga, nba, ipl] = await Promise.all([
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Soccer`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${eplId}`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${laLigaId}`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${serieAId}`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${bundesligaId}`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${nbaId}`).catch(() => null),
+          axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${iplId}`).catch(() => null),
+        ]);
+
+        const todayMatches = todayEvents?.data?.events || [];
+        
+        // Build Context String
+        if (todayMatches.length > 0) {
+          sportsContext += `\n=== TODAY'S SOCCER MATCHES (${dateStr}) ===\n`;
+          todayMatches.slice(0, 15).forEach(m => {
+            sportsContext += `- ${m.strEvent} (${m.strLeague}) | Time: ${m.strTime || 'TBD'}\n`;
+          });
         }
+
+        sportsContext += `\n=== UPCOMING HIGHLIGHTS ===\n`;
+        
+        const addLeagueToContext = (data, name) => {
+          if (data?.events) {
+            sportsContext += `\n**${name}:**\n`;
+            data.events.slice(0, 5).forEach(m => {
+              sportsContext += `- ${m.dateEvent}: ${m.strEvent} (${m.strTime})\n`;
+            });
+          }
+        };
+
+        addLeagueToContext(premierLeague?.data, "Premier League");
+        addLeagueToContext(laLiga?.data, "La Liga");
+        addLeagueToContext(serieA?.data, "Serie A");
+        addLeagueToContext(bundesliga?.data, "Bundesliga");
+        addLeagueToContext(nba?.data, "NBA");
+        addLeagueToContext(ipl?.data, "IPL Cricket");
+
       } catch (sportsError) {
         console.log('Sports API fetch error:', sportsError);
       }
 
+      // --- STEP 2: SEND TO GEMINI ---
       const response = await axios.post(
         `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
           contents: [{
             parts: [{
-              text: `You are a helpful sports assistant for an app called SportX. You have access to live sports data. Format your response using markdown (bold, italic, lists, etc.). Answer this sports-related question concisely: ${inputText}${sportsContext}`
+              text: `You are a helpful sports assistant for SportX app.
+              
+              Here is the latest LIVE data fetched from the API:
+              ${sportsContext}
+
+              INSTRUCTIONS:
+              1. Answer the user's question: "${inputText}"
+              2. Use the live data provided above to be accurate about dates and times.
+              3. If the user asks about a specific league not in the list, answer from your general knowledge but mention you don't have the live schedule.
+              4. Format nicely with Markdown (bolding teams, lists).
+              `
             }]
           }]
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          }
         }
       );
 
@@ -156,7 +220,7 @@ const ChatbotScreen = ({ navigation }) => {
     <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -211,7 +275,7 @@ const createStyles = (COLORS) => StyleSheet.create({
     backgroundColor: COLORS.background 
   },
   header: {
-    height: 80,
+    height: 60,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
@@ -236,7 +300,7 @@ const createStyles = (COLORS) => StyleSheet.create({
     paddingBottom: SPACING.lg 
   },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: '85%',
     padding: SPACING.md,
     borderRadius: 15,
     marginBottom: SPACING.sm,
@@ -248,29 +312,22 @@ const createStyles = (COLORS) => StyleSheet.create({
   },
   botBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.card,
     borderBottomLeftRadius: 2,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  messageText: { 
-    fontSize: FONT_SIZES.md, 
-    lineHeight: 22 
-  },
   userText: { 
-    color: '#ffffff' 
-  },
-  botText: { 
-    color: COLORS.text 
+    color: '#ffffff',
+    fontSize: FONT_SIZES.md,
   },
   inputContainer: {
     flexDirection: 'row',
     padding: SPACING.sm,
     backgroundColor: COLORS.card,
-    alignItems: 'flex-end',
+    alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingBottom: Platform.OS === 'android' ? SPACING.sm : SPACING.sm,
   },
   input: {
     flex: 1,

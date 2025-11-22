@@ -90,7 +90,7 @@ const FavoritesScreen = ({ navigation }) => {
   const styles = createStyles(COLORS);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.headerContainer}>
