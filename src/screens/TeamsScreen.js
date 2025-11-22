@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,38 +9,41 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
-import {
-  fetchTeams,
-  loadFavorites,
-  selectAllTeams,
-  selectIsLoading,
-  selectError,
-  selectActiveLeague,
-} from '../redux/sportsSlice';
+import axios from 'axios';
+import { selectActiveLeague } from '../redux/sportsSlice';
 import TeamCard from '../components/TeamCard';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const TeamsScreen = ({ navigation }) => {
-  const dispatch = useDispatch();
-  const teams = useSelector(selectAllTeams);
-  const loading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
   const activeLeague = useSelector(selectActiveLeague);
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchTeams = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const leagueName = activeLeague?.strLeague || 'English Premier League';
+      const response = await axios.get(
+        `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${encodeURIComponent(leagueName)}`
+      );
+      setTeams(response.data.teams || []);
+    } catch (err) {
+      setError('Failed to load teams. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    dispatch(loadFavorites());
-    // Fetch teams using league ID
-    if (activeLeague?.idLeague) {
-      dispatch(fetchTeams(activeLeague.strLeague || activeLeague.str));
-    }
-  }, [dispatch, activeLeague?.idLeague]);
+    fetchTeams();
+  }, [activeLeague]);
 
   const handleRefresh = () => {
-    if (activeLeague?.idLeague) {
-      dispatch(fetchTeams(activeLeague.strLeague || activeLeague.str));
-    }
+    fetchTeams();
   };
 
   const renderHeader = () => (
@@ -51,7 +54,7 @@ const TeamsScreen = ({ navigation }) => {
         <Icon name="arrow-left" size={24} color={COLORS.white} />
       </TouchableOpacity>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>{activeLeague.name} Teams</Text>
+        <Text style={styles.headerTitle}>{activeLeague?.strLeague || activeLeague?.name || 'League'} Teams</Text>
         <Text style={styles.headerSubtitle}>
           {teams.length} teams
         </Text>

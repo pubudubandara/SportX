@@ -22,10 +22,8 @@ const SquadsScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (activeLeague) {
-      fetchTeams();
-    }
-  }, [activeLeague?.idLeague, activeLeague?.str]);
+    fetchTeams();
+  }, [activeLeague]);
 
   const fetchTeams = async () => {
     try {
@@ -109,7 +107,7 @@ const SquadsScreen = ({ navigation }) => {
                     activeOpacity={0.8}>
                     {team.strTeamBadge ? (
                       <Image
-                        source={{ uri: team.strTeamBadge }}
+                        source={{ uri: `${team.strTeamBadge}/tiny` }}
                         style={styles.teamBadge}
                         resizeMode="contain"
                       />

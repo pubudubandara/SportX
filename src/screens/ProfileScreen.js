@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,27 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Switch,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import { logoutUser } from '../redux/authSlice';
+import { selectActiveLeague } from '../redux/sportsSlice';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const favorites = useSelector((state) => state.sports.favorites);
+  const activeLeague = useSelector(selectActiveLeague);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleLogout = () => {
     dispatch(logoutUser());
+  };
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // You can dispatch to Redux here if you want to persist theme
   };
 
   const profileSections = [
@@ -35,14 +43,13 @@ const ProfileScreen = ({ navigation }) => {
       items: [
         { icon: 'user', label: 'First Name', value: user?.firstName || 'N/A' },
         { icon: 'user', label: 'Last Name', value: user?.lastName || 'N/A' },
-        { icon: 'calendar', label: 'Birth Date', value: user?.birthDate || 'N/A' },
-        { icon: 'users', label: 'Gender', value: user?.gender || 'N/A' },
       ],
     },
     {
-      title: 'Statistics',
+      title: 'Preferences',
       items: [
-        { icon: 'heart', label: 'Favorite Teams', value: favorites.length.toString() },
+        { icon: 'activity', label: 'Active League', value: activeLeague?.strLeague || activeLeague?.name || 'None' },
+        { icon: 'compass', label: 'Sport', value: activeLeague?.strSport || 'N/A' },
       ],
     },
   ];
@@ -93,6 +100,34 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
         ))}
+
+        {/* Appearance Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <View style={styles.sectionCard}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoLeft}>
+                <View style={styles.iconWrapper}>
+                  <Icon name={isDarkMode ? 'moon' : 'sun'} size={18} color={COLORS.primary} />
+                </View>
+                <View>
+                  <Text style={styles.infoLabel}>Dark Mode</Text>
+                  <Text style={styles.themeSubtext}>
+                    {isDarkMode ? 'Dark theme enabled' : 'Light theme enabled'}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#e5e7eb', true: '#3663b1' }}
+                thumbColor={isDarkMode ? '#ffffff' : '#f9fafb'}
+                ios_backgroundColor="#e5e7eb"
+                style={{ transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }] }}
+              />
+            </View>
+          </View>
+        </View>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -210,6 +245,11 @@ const styles = StyleSheet.create({
     fontWeight: FONT_WEIGHTS.semibold,
     maxWidth: '50%',
     textAlign: 'right',
+  },
+  themeSubtext: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textLight,
+    marginTop: 2,
   },
   logoutButton: {
     flexDirection: 'row',

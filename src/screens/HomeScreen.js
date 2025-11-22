@@ -176,12 +176,19 @@ const HomeScreen = ({ navigation }) => {
   const Header = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
+        {/* Updated: White circle background with primary colored icon */}
         <View style={styles.logoCircle}>
-          <Feather name="activity" size={20} color="white" />
+          <Feather name="activity" size={20} color="#3663b1" />
         </View>
+        {/* Updated: White Text */}
         <Text style={styles.headerTitle}>SportyX</Text>
       </View>
-      <TouchableOpacity style={styles.profileButton}>
+      
+      {/* Updated: Navigation to Profile on press */}
+      <TouchableOpacity 
+        style={styles.profileButton}
+        onPress={() => navigation.navigate('Profile')}
+      >
         <Image 
           source={{ uri: getOptimizedImage(user?.image, 'tiny') || 'https://via.placeholder.com/40' }} 
           style={styles.profileImage} 
@@ -277,7 +284,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#f8f9fa" barStyle="dark-content" />
+      <StatusBar backgroundColor="#3663b1" barStyle="light-content" />
       <Header />
 
       {/* Use FlatList to render Upcoming Matches vertically, everything else is in Header */}
@@ -363,12 +370,34 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
   // Header & Search
-  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50, backgroundColor: 'white' },
+  headerContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 20, 
+    paddingVertical: 15, 
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50, 
+    backgroundColor: '#3663b1' // Changed to Primary Color
+  },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  logoCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#3663b1', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#333', letterSpacing: 0.5 },
-  profileImage: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: '#f0f0f0' },
+  logoCircle: { 
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    backgroundColor: 'white', // Changed to white for contrast
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginRight: 10 
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: '800', 
+    color: 'white', // Changed to white
+    letterSpacing: 0.5 
+  },
+  profileImage: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'white' },
   onlineBadge: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#2ecc71', position: 'absolute', bottom: 0, right: 0, borderWidth: 2, borderColor: 'white' },
+  
   searchWrapper: { paddingHorizontal: 15, marginVertical: 15 },
   searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 15, height: 50, borderWidth: 1, borderColor: '#eee' },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333' },

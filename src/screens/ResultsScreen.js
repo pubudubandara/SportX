@@ -26,7 +26,7 @@ const ResultsScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      const leagueId = activeLeague?.idLeague || activeLeague?.id || '4328';
+      const leagueId = activeLeague?.idLeague || '4328';
       const response = await axios.get(
         `https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=${leagueId}`
       );
@@ -39,10 +39,8 @@ const ResultsScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if (activeLeague) {
-      fetchResults();
-    }
-  }, [activeLeague?.idLeague, activeLeague?.id]);
+    fetchResults();
+  }, [activeLeague]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -97,7 +95,7 @@ const ResultsScreen = ({ navigation }) => {
           <View style={[styles.teamResultContainer, resultStatus === 'home-win' && styles.winnerTeam]}>
             {item.strHomeTeamBadge && (
               <Image
-                source={{ uri: item.strHomeTeamBadge }}
+                source={{ uri: `${item.strHomeTeamBadge}/tiny` }}
                 style={styles.teamBadgeSmall}
                 resizeMode="contain"
               />
@@ -127,7 +125,7 @@ const ResultsScreen = ({ navigation }) => {
             </Text>
             {item.strAwayTeamBadge && (
               <Image
-                source={{ uri: item.strAwayTeamBadge }}
+                source={{ uri: `${item.strAwayTeamBadge}/tiny` }}
                 style={styles.teamBadgeSmall}
                 resizeMode="contain"
               />

@@ -3,92 +3,57 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
-import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
-import { selectFavoriteTeams } from '../redux/sportsSlice';
-import TeamCard from '../components/TeamCard';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const FavoritesScreen = ({ navigation }) => {
-  const favoriteTeams = useSelector(selectFavoriteTeams);
-  const user = useSelector((state) => state.auth.user);
-
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <Text style={styles.greeting}>Your Favorites 💙</Text>
-      <Text style={styles.headerSubtitle}>
-        {favoriteTeams.length} {favoriteTeams.length === 1 ? 'team' : 'teams'} saved
-      </Text>
-    </View>
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Icon name="heart" size={80} color={COLORS.textLight} />
-      <Text style={styles.emptyText}>No Favorites Yet</Text>
-      <Text style={styles.emptySubtext}>
-        Start adding teams to your favorites from the Home screen
-      </Text>
-      <TouchableOpacity
-        style={styles.goHomeButton}
-        onPress={() => navigation.navigate('Home')}>
-        <Text style={styles.goHomeText}>Explore Teams</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={favoriteTeams}
-        keyExtractor={(item) => item.idTeam}
-        renderItem={({ item }) => (
-          <TeamCard
-            team={item}
-            onPress={() => navigation.navigate('Details', { team: item })}
-          />
-        )}
-        ListHeaderComponent={favoriteTeams.length > 0 ? renderHeader : null}
-        ListEmptyComponent={renderEmptyState}
-        contentContainerStyle={
-          favoriteTeams.length === 0 ? styles.emptyList : styles.listContent
-        }
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Favorites</Text>
+        </View>
+
+        {/* Empty State */}
+        <View style={styles.emptyState}>
+          <Icon name="info" size={60} color={COLORS.primary} />
+          <Text style={styles.emptyText}>Feature Unavailable</Text>
+          <Text style={styles.emptySubtext}>
+            Favorites feature has been temporarily disabled.{'\n'}
+            Browse teams and leagues from the Home screen.
+          </Text>
+          <TouchableOpacity
+            style={styles.goHomeButton}
+            onPress={() => navigation.navigate('Home')}>
+            <Text style={styles.goHomeText}>Go to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
   headerContainer: {
-    padding: SPACING.lg,
     backgroundColor: COLORS.primary,
-    borderBottomWidth: 0,
-    paddingTop: SPACING.xl
+    padding: SPACING.lg,
   },
-  greeting: {
-    fontSize: FONT_SIZES.xl,
+  headerTitle: {
+    fontSize: FONT_SIZES.xxl,
     fontWeight: FONT_WEIGHTS.bold,
     color: COLORS.white,
-  },
-  headerSubtitle: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.white,
-    marginTop: SPACING.xs,
-    opacity: 0.9,
-  },
-  listContent: {
-    paddingVertical: SPACING.sm,
-  },
-  emptyList: {
-    flexGrow: 1,
   },
   emptyState: {
     flex: 1,

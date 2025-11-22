@@ -26,7 +26,7 @@ const MatchesScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setError(null);
-      const leagueId = activeLeague?.idLeague || activeLeague?.id || '4328';
+      const leagueId = activeLeague?.idLeague || '4328';
       const response = await axios.get(
         `https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`
       );
@@ -39,10 +39,8 @@ const MatchesScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if (activeLeague) {
-      fetchMatches();
-    }
-  }, [activeLeague?.idLeague, activeLeague?.id]);
+    fetchMatches();
+  }, [activeLeague]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -89,7 +87,7 @@ const MatchesScreen = ({ navigation }) => {
         <View style={styles.teamContainer}>
           {item.strHomeTeamBadge && (
             <Image
-              source={{ uri: item.strHomeTeamBadge }}
+              source={{ uri: `${item.strHomeTeamBadge}/tiny` }}
               style={styles.teamBadge}
               resizeMode="contain"
             />
@@ -107,7 +105,7 @@ const MatchesScreen = ({ navigation }) => {
         <View style={styles.teamContainer}>
           {item.strAwayTeamBadge && (
             <Image
-              source={{ uri: item.strAwayTeamBadge }}
+              source={{ uri: `${item.strAwayTeamBadge}/tiny` }}
               style={styles.teamBadge}
               resizeMode="contain"
             />

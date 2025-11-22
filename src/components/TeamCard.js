@@ -8,20 +8,12 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { useDispatch, useSelector } from 'react-redux';
-import { toggleFavorite, selectIsFavorite } from '../redux/sportsSlice';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - SPACING.lg * 2;
 
 const TeamCard = ({ team, onPress }) => {
-  const dispatch = useDispatch();
-  const isFavorite = useSelector(selectIsFavorite(team.idTeam));
-
-  const handleFavoriteToggle = () => {
-    dispatch(toggleFavorite(team.idTeam));
-  };
 
   return (
     <TouchableOpacity
@@ -33,7 +25,7 @@ const TeamCard = ({ team, onPress }) => {
         <View style={styles.imageContainer}>
           {(team.strTeamBadge || team.strBadge) ? (
             <Image
-              source={{ uri: team.strTeamBadge || team.strBadge }}
+              source={{ uri: `${team.strTeamBadge || team.strBadge}/tiny` }}
               style={styles.teamBadge}
               resizeMode="contain"
             />
@@ -61,19 +53,6 @@ const TeamCard = ({ team, onPress }) => {
             </View>
           )}
         </View>
-
-        {/* Favorite Button */}
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={handleFavoriteToggle}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Icon
-            name={isFavorite ? 'heart' : 'heart'}
-            size={24}
-            color={isFavorite ? COLORS.error : COLORS.textLight}
-            fill={isFavorite ? COLORS.error : 'transparent'}
-          />
-        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );

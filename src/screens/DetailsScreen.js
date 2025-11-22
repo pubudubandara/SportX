@@ -10,18 +10,14 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
-import { toggleFavorite, selectIsFavorite } from '../redux/sportsSlice';
 import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const { width } = Dimensions.get('window');
 
 const DetailsScreen = ({ route, navigation }) => {
   const { team } = route.params;
-  const dispatch = useDispatch();
-  const isFavorite = useSelector(selectIsFavorite(team.idTeam));
   const [squad, setSquad] = useState([]);
   const [loadingSquad, setLoadingSquad] = useState(true);
 
@@ -45,10 +41,6 @@ const DetailsScreen = ({ route, navigation }) => {
     } finally {
       setLoadingSquad(false);
     }
-  };
-
-  const handleFavoriteToggle = () => {
-    dispatch(toggleFavorite(team.idTeam));
   };
 
   const openWebsite = () => {
@@ -97,25 +89,13 @@ const DetailsScreen = ({ route, navigation }) => {
           onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color={COLORS.white} />
         </TouchableOpacity>
-
-        {/* Favorite Button */}
-        <TouchableOpacity
-          style={styles.favoriteButtonTop}
-          onPress={handleFavoriteToggle}>
-          <Icon
-            name="heart"
-            size={24}
-            color={isFavorite ? COLORS.error : COLORS.white}
-            fill={isFavorite ? COLORS.error : 'transparent'}
-          />
-        </TouchableOpacity>
       </View>
 
       {/* Team Badge and Name */}
       <View style={styles.teamHeader}>
         {team.strTeamBadge && (
           <Image
-            source={{ uri: team.strTeamBadge }}
+            source={{ uri: `${team.strTeamBadge}/small` }}
             style={styles.teamBadge}
             resizeMode="contain"
           />
@@ -197,7 +177,7 @@ const DetailsScreen = ({ route, navigation }) => {
                 <View style={styles.playerInfo}>
                   {player.strCutout ? (
                     <Image
-                      source={{ uri: player.strCutout }}
+                      source={{ uri: `${player.strCutout}/tiny` }}
                       style={styles.playerImage}
                       resizeMode="cover"
                     />
