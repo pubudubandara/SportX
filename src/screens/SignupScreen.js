@@ -14,9 +14,10 @@ import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import { signupUser } from '../redux/authSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -42,8 +43,12 @@ const SignupSchema = Yup.object().shape({
 const SignupScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const styles = createStyles(COLORS);
 
   const handleSignup = async (values) => {
     const { confirmPassword, ...userData } = values;
@@ -220,7 +225,7 @@ const SignupScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,

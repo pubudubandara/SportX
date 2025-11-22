@@ -140,12 +140,12 @@ const LoginScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Demo Credentials */}
+              {/* Demo Credentials
               <View style={styles.demoContainer}>
                 <Text style={styles.demoTitle}>Demo Credentials:</Text>
                 <Text style={styles.demoText}>Username: admin</Text>
                 <Text style={styles.demoText}>Password: admin</Text>
-              </View>
+              </View> */}
             </View>
           )}
         </Formik>
