@@ -130,6 +130,46 @@ const FavoritesStack = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="LeagueDashboard"
+        component={LeagueDashboard}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Teams"
+        component={TeamsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Matches"
+        component={MatchesScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Results"
+        component={ResultsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Squads"
+        component={SquadsScreen}
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
         name="Details"
         component={DetailsScreen}
         options={{
