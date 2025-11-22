@@ -369,7 +369,7 @@ const createStyles = (COLORS) => StyleSheet.create({
     fontSize: FONT_SIZES.md,
     color: COLORS.text,
     fontWeight: FONT_WEIGHTS.semibold,
-    maxWidth: '50%',
+    maxWidth: '90%',
     textAlign: 'right',
   },
   themeSubtext: {
