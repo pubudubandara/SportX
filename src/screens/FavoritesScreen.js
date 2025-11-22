@@ -15,6 +15,7 @@ import axios from 'axios';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
+import { FavoriteLeagueCardSkeleton } from '../components/SkeletonLoader';
 
 const FavoritesScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -102,8 +103,12 @@ const FavoritesScreen = ({ navigation }) => {
 
         {/* Content */}
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
+          <View style={{ flex: 1, paddingTop: 15 }}>
+            <FavoriteLeagueCardSkeleton />
+            <FavoriteLeagueCardSkeleton />
+            <FavoriteLeagueCardSkeleton />
+            <FavoriteLeagueCardSkeleton />
+            <FavoriteLeagueCardSkeleton />
           </View>
         ) : leagues.length === 0 ? (
           <View style={styles.emptyState}>

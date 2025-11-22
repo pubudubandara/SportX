@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
@@ -16,6 +17,7 @@ import axios from 'axios';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { selectActiveLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
+import { MatchCardSkeleton } from '../components/SkeletonLoader';
 
 const ResultsScreen = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
@@ -172,9 +174,20 @@ const ResultsScreen = ({ navigation }) => {
   if (loading && results.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading results...</Text>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Icon name="arrow-left" size={24} color="#ffffff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Results</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <ScrollView style={styles.content}>
+            <MatchCardSkeleton />
+            <MatchCardSkeleton />
+            <MatchCardSkeleton />
+            <MatchCardSkeleton />
+          </ScrollView>
         </View>
       </SafeAreaView>
     );

@@ -21,6 +21,7 @@ import axios from 'axios';
 import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
 import { getColors } from '../utils/constants';
+import { HomeScreenSkeleton } from '../components/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 const PADDING = 15;
@@ -379,8 +380,10 @@ const HomeScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={styles.container}>
+        <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
+        <Header />
+        <HomeScreenSkeleton />
       </View>
     );
   }

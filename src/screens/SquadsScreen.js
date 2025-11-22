@@ -15,6 +15,7 @@ import axios from 'axios';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { selectActiveLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
+import { TeamCardSkeleton } from '../components/SkeletonLoader';
 
 const SquadsScreen = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
@@ -85,9 +86,12 @@ const SquadsScreen = ({ navigation }) => {
           </View>
 
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.loadingText}>Loading teams...</Text>
+            <View style={styles.content}>
+              <TeamCardSkeleton />
+              <TeamCardSkeleton />
+              <TeamCardSkeleton />
+              <TeamCardSkeleton />
+              <TeamCardSkeleton />
             </View>
           ) : error ? (
             <View style={styles.errorContainer}>

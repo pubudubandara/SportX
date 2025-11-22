@@ -15,6 +15,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { selectIsDarkMode } from '../redux/themeSlice';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { PlayerCardSkeleton} from '../components/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -170,9 +171,13 @@ const DetailsScreen = ({ route, navigation }) => {
         </View>
         
         {loadingSquad ? (
-          <View style={styles.loadingSquad}>
-            <ActivityIndicator size="large" color={primaryColor} />
-            <Text style={styles.loadingText}>Loading squad...</Text>
+          <View style={styles.squadGrid}>
+            <PlayerCardSkeleton />
+            <PlayerCardSkeleton />
+            <PlayerCardSkeleton />
+            <PlayerCardSkeleton />
+            <PlayerCardSkeleton />
+            <PlayerCardSkeleton />
           </View>
         ) : squad.length > 0 ? (
           <View style={styles.squadGrid}>

@@ -16,6 +16,7 @@ import { selectActiveLeague } from '../redux/sportsSlice';
 import { selectIsDarkMode } from '../redux/themeSlice';
 import TeamCard from '../components/TeamCard';
 import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { TeamCardSkeleton } from '../components/SkeletonLoader';
 
 const TeamsScreen = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
@@ -91,9 +92,21 @@ const TeamsScreen = ({ navigation }) => {
   if (loading && teams.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading teams...</Text>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Icon name="arrow-left" size={24} color="#ffffff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Teams</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <View style={styles.content}>
+            <TeamCardSkeleton />
+            <TeamCardSkeleton />
+            <TeamCardSkeleton />
+            <TeamCardSkeleton />
+            <TeamCardSkeleton />
+          </View>
         </View>
       </SafeAreaView>
     );
