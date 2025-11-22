@@ -291,8 +291,11 @@ const HomeScreen = ({ navigation }) => {
         : 'https://via.placeholder.com/400x200/3663b1/ffffff?text=No+Image';
 
     const toggleFavorite = (e) => {
-      e.stopPropagation();
+      e?.stopPropagation();
+      console.log('Toggling favorite for league:', league.idLeague);
+      console.log('Current favorites:', favoriteLeagues);
       dispatch(toggleFavoriteLeague(league.idLeague));
+      console.log('Dispatched toggleFavoriteLeague');
     };
 
     return (
