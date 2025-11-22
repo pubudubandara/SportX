@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,21 +12,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import { logoutUser } from '../redux/authSlice';
 import { selectActiveLeague } from '../redux/sportsSlice';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { toggleTheme, selectIsDarkMode } from '../redux/themeSlice';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const ProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const activeLeague = useSelector(selectActiveLeague);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
 
   const handleLogout = () => {
     dispatch(logoutUser());
   };
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    // You can dispatch to Redux here if you want to persist theme
+  const handleToggleTheme = () => {
+    dispatch(toggleTheme());
   };
 
   const profileSections = [
@@ -53,6 +54,8 @@ const ProfileScreen = ({ navigation }) => {
       ],
     },
   ];
+
+  const styles = createStyles(COLORS);
 
   return (
     <View style={styles.container}>
@@ -119,7 +122,7 @@ const ProfileScreen = ({ navigation }) => {
               </View>
               <Switch
                 value={isDarkMode}
-                onValueChange={toggleTheme}
+                onValueChange={handleToggleTheme}
                 trackColor={{ false: '#e5e7eb', true: '#3663b1' }}
                 thumbColor={isDarkMode ? '#ffffff' : '#f9fafb'}
                 ios_backgroundColor="#e5e7eb"
@@ -143,7 +146,7 @@ const ProfileScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.white,
+    color: '#ffffff',
   },
   scrollView: {
     flex: 1,

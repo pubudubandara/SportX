@@ -19,6 +19,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
+import { getColors } from '../utils/constants';
 
 const { width } = Dimensions.get('window');
 const PADDING = 15;
@@ -48,6 +50,8 @@ const getOptimizedImage = (url, type = 'original') => {
 const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector(state => state.auth.user);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
 
   // --- STATE ---
   const [countries, setCountries] = useState([]);
@@ -371,17 +375,19 @@ const HomeScreen = ({ navigation }) => {
     </View>
   );
 
-  if (loading && leagues.length === 0) {
+  const styles = createStyles(COLORS);
+
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3663b1" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#3663b1" barStyle="light-content" />
+      <StatusBar backgroundColor={COLORS.primary} barStyle="light-content" />
       <Header />
       <FlatList
         data={upcomingMatches}
@@ -493,9 +499,9 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+const createStyles = (COLORS) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
 
   // Header & Search
   headerContainer: {
@@ -505,14 +511,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
-    backgroundColor: '#3663b1', // Changed to Primary Color
+    backgroundColor: COLORS.primary,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   logoCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'white', // Changed to white for contrast
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -520,7 +526,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: 'white', // Changed to white
+    color: '#ffffff',
     letterSpacing: 0.5,
   },
   profileImage: {
@@ -528,7 +534,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: '#ffffff',
   },
   onlineBadge: {
     width: 12,
@@ -546,14 +552,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 15,
     height: 50,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: COLORS.border,
   },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333' },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: COLORS.text },
 
   // Country Selector
   countrySection: { marginBottom: 20 },
@@ -568,17 +574,17 @@ const styles = StyleSheet.create({
   countryChip: {
     paddingHorizontal: 18,
     paddingVertical: 10,
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
     borderRadius: 20,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: COLORS.border,
     minWidth: 80,
     alignItems: 'center',
   },
-  countryChipActive: { backgroundColor: '#3663b1', borderColor: '#3663b1' },
-  countryText: { color: '#555', fontWeight: '600' },
-  countryTextActive: { color: 'white' },
+  countryChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  countryText: { color: COLORS.textLight, fontWeight: '600' },
+  countryTextActive: { color: '#ffffff' },
 
   // Section Layout
   sectionContainer: { marginBottom: 25 },
@@ -588,7 +594,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
   },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text },
 
   // Horizontal League Card
   leagueCardH: {
@@ -653,19 +659,19 @@ const styles = StyleSheet.create({
 
   // Match Card
   matchCard: {
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 15,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: COLORS.border,
     marginBottom: 5,
   },
   matchCardToday: {
     borderWidth: 1,
-    borderColor: '#3663b1',
+    borderColor: COLORS.primary,
     minWidth: 260,
     marginRight: 15,
-  }, // Special style for Today
+  },
   liveBadge: {
     position: 'absolute',
     top: 0,
@@ -676,7 +682,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 11,
     borderBottomLeftRadius: 8,
   },
-  liveText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  liveText: { color: '#ffffff', fontSize: 10, fontWeight: 'bold' },
   matchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -686,13 +692,13 @@ const styles = StyleSheet.create({
   matchTeam: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#333',
+    color: COLORS.text,
     flex: 1,
     textAlign: 'center',
   },
   vsText: {
     fontSize: 12,
-    color: '#999',
+    color: COLORS.textLight,
     fontWeight: 'bold',
     marginHorizontal: 10,
   },
@@ -701,11 +707,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 5,
   },
-  matchDate: { color: '#888', fontSize: 12 },
-  matchTime: { color: '#3663b1', fontWeight: 'bold', fontSize: 12 },
+  matchDate: { color: COLORS.textLight, fontSize: 12 },
+  matchTime: { color: COLORS.primary, fontWeight: 'bold', fontSize: 12 },
 
   emptyBox: { paddingHorizontal: 15 },
-  emptyText: { color: '#999', fontStyle: 'italic' },
+  emptyText: { color: COLORS.textLight, fontStyle: 'italic' },
 });
 
 export default HomeScreen;

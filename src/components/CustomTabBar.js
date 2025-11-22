@@ -1,9 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { selectIsDarkMode } from '../redux/themeSlice';
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
+  const styles = createStyles(COLORS);
+
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -73,7 +79,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 <Icon
                   name={getIconName()}
                   size={24}
-                  color={isFocused ? COLORS.white : COLORS.textLight}
+                  color={isFocused ? '#ffffff' : COLORS.textLight}
                 />
               </View>
             </View>
@@ -88,7 +94,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: COLORS.white,
@@ -119,7 +125,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   activeIconBackground: {
-    backgroundColor: COLORS.primary + '20', // Adds 20% opacity background
+    backgroundColor: COLORS.primary + '20',
   },
   // Inner icon container
   iconContainer: {

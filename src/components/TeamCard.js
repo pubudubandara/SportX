@@ -7,13 +7,18 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { selectIsDarkMode } from '../redux/themeSlice';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - SPACING.lg * 2;
 
 const TeamCard = ({ team, onPress }) => {
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
+  const styles = createStyles(COLORS);
 
   return (
     <TouchableOpacity
@@ -58,7 +63,7 @@ const TeamCard = ({ team, onPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 16,

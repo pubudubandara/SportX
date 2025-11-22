@@ -13,6 +13,24 @@ export const COLORS = {
   cardShadow: '#000',
 };
 
+// Dark Theme Colors
+export const DARK_COLORS = {
+  primary: '#4a7bd1',
+  secondary: '#3a5fa0',
+  background: '#121212',
+  white: '#1e1e1e',
+  text: '#e5e5e5',
+  textLight: '#9ca3af',
+  border: '#2a2a2a',
+  error: '#ef4444',
+  success: '#10b981',
+  warning: '#f59e0b',
+  cardShadow: '#000',
+};
+
+// Function to get theme colors
+export const getColors = (isDarkMode) => isDarkMode ? DARK_COLORS : COLORS;
+
 export const SPACING = {
   xs: 4,
   sm: 8,

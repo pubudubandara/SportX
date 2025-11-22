@@ -4,17 +4,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { combineReducers } from 'redux';
 import authReducer from './authSlice';
 import sportsReducer from './sportsSlice';
+import themeReducer from './themeSlice';
 
 // Persist configuration
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth', 'sports'], // Only persist auth and sports
+  whitelist: ['auth', 'sports', 'theme'], // Persist auth, sports, and theme
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   sports: sportsReducer,
+  theme: themeReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

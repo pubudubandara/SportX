@@ -12,12 +12,15 @@ import {
 import Icon from 'react-native-vector-icons/Feather';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 
 const FavoritesScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const favoriteLeagues = useSelector(state => state.sports.favoriteLeagues);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,6 +87,8 @@ const FavoritesScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  const styles = createStyles(COLORS);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -127,7 +132,7 @@ const FavoritesScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.primary,
@@ -143,11 +148,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.white,
+    color: '#ffffff',
   },
   headerSubtitle: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.white,
+    color: '#ffffff',
     opacity: 0.8,
     marginTop: 4,
   },
@@ -221,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   goHomeText: {
-    color: COLORS.white,
+    color: '#ffffff',
     fontSize: FONT_SIZES.md,
     fontWeight: FONT_WEIGHTS.semibold,
   },
