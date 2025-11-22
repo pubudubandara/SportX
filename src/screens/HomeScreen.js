@@ -495,6 +495,15 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
       />
+
+      {/* Floating Chatbot Button */}
+      <TouchableOpacity
+        style={styles.chatbotFab}
+        onPress={() => navigation.navigate('Chatbot')}
+        activeOpacity={0.8}
+      >
+        <Feather name="message-circle" size={28} color="#ffffff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -712,6 +721,24 @@ const createStyles = (COLORS) => StyleSheet.create({
 
   emptyBox: { paddingHorizontal: 15 },
   emptyText: { color: COLORS.textLight, fontStyle: 'italic' },
+
+  // Floating Chatbot Button
+  chatbotFab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
 });
 
 export default HomeScreen;

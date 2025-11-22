@@ -132,6 +132,15 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* AI Chatbot Button */}
+        <TouchableOpacity 
+          style={styles.chatbotButton} 
+          onPress={() => navigation.navigate('Chatbot')}
+        >
+          <Icon name="message-circle" size={20} color={COLORS.white} />
+          <Text style={styles.chatbotText}>Coach Gemini AI</Text>
+        </TouchableOpacity>
+
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="log-out" size={20} color={COLORS.white} />
@@ -253,6 +262,27 @@ const createStyles = (COLORS) => StyleSheet.create({
     fontSize: FONT_SIZES.xs,
     color: COLORS.textLight,
     marginTop: 2,
+  },
+  chatbotButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.xl,
+    paddingVertical: SPACING.md,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  chatbotText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.white,
+    fontWeight: FONT_WEIGHTS.bold,
+    marginLeft: SPACING.sm,
   },
   logoutButton: {
     flexDirection: 'row',
