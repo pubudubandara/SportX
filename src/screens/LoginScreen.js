@@ -15,9 +15,10 @@ import * as Yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import { loginUser } from '../redux/authSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string()
@@ -31,6 +32,8 @@ const LoginSchema = Yup.object().shape({
 const LoginScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (values) => {
@@ -40,6 +43,8 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert('Login Failed', error.response?.data?.message || 'Please check your credentials');
     }
   };
+
+  const styles = createStyles(COLORS);
 
   return (
     <KeyboardAvoidingView
@@ -149,7 +154,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,

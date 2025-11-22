@@ -13,11 +13,14 @@ import {
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { selectActiveLeague } from '../redux/sportsSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 
 const ResultsScreen = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -164,6 +167,8 @@ const ResultsScreen = ({ navigation }) => {
     </View>
   );
 
+  const styles = createStyles(COLORS);
+
   if (loading && results.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -211,7 +216,7 @@ const ResultsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.primary,

@@ -10,11 +10,14 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 import { selectActiveLeague } from '../redux/sportsSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 
 const LeagueDashboard = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
 
   const menuItems = [
     {
@@ -50,6 +53,8 @@ const LeagueDashboard = ({ navigation }) => {
       color: '#5685d9',
     },
   ];
+
+  const styles = createStyles(COLORS);
 
   const renderMenuButton = (item) => (
     <TouchableOpacity
@@ -98,7 +103,7 @@ const LeagueDashboard = ({ navigation }) => {
               />
             ) : (
               <View style={styles.badgePlaceholder}>
-                <Icon name="shield" size={80} color={COLORS.white} />
+                <Icon name="shield" size={80} color='#fffff' />
               </View>
             )}
             <Text style={styles.leagueName}>
@@ -136,7 +141,7 @@ const LeagueDashboard = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -194,7 +199,7 @@ const styles = StyleSheet.create({
   leagueName: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.white,
+    color: "#ffffff",
     textAlign: 'center',
     marginBottom: SPACING.xs,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
   },
   leagueSport: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.white,
+    color: '#ffffff',
     opacity: 0.9,
     textAlign: 'center',
   },

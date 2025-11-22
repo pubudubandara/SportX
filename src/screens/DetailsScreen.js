@@ -12,12 +12,16 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { useSelector } from 'react-redux';
+import { selectIsDarkMode } from '../redux/themeSlice';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const { width } = Dimensions.get('window');
 
 const DetailsScreen = ({ route, navigation }) => {
   const { team } = route.params;
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [squad, setSquad] = useState([]);
   const [loadingSquad, setLoadingSquad] = useState(true);
 
@@ -51,6 +55,8 @@ const DetailsScreen = ({ route, navigation }) => {
       Linking.openURL(url);
     }
   };
+
+  const styles = createStyles(COLORS);
 
   const InfoRow = ({ icon, label, value }) => {
     if (!value) return null;
@@ -259,7 +265,7 @@ const DetailsScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,

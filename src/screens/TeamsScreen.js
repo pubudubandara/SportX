@@ -13,11 +13,14 @@ import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Feather';
 import axios from 'axios';
 import { selectActiveLeague } from '../redux/sportsSlice';
+import { selectIsDarkMode } from '../redux/themeSlice';
 import TeamCard from '../components/TeamCard';
-import { COLORS, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
+import { getColors, SPACING, FONT_SIZES, FONT_WEIGHTS } from '../utils/constants';
 
 const TeamsScreen = ({ navigation }) => {
   const activeLeague = useSelector(selectActiveLeague);
+  const isDarkMode = useSelector(selectIsDarkMode);
+  const COLORS = getColors(isDarkMode);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,6 +86,8 @@ const TeamsScreen = ({ navigation }) => {
     </View>
   );
 
+  const styles = createStyles(COLORS);
+
   if (loading && teams.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -135,7 +140,7 @@ const TeamsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.primary,
@@ -172,11 +177,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZES.xl,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.white,
+    color:"#ffffff",
   },
   headerSubtitle: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.white,
+    color: "#ffffff",
     marginTop: SPACING.xs,
     opacity: 0.9,
   },
