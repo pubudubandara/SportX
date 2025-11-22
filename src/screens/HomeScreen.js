@@ -13,62 +13,74 @@ import {
   StatusBar,
   Animated,
   Easing,
-  Keyboard
+  Keyboard,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { setActiveLeague } from '../redux/sportsSlice';
+import { setActiveLeague, toggleFavoriteLeague } from '../redux/sportsSlice';
 
 const { width } = Dimensions.get('window');
 const PADDING = 15;
 // Adjusted sizes for horizontal layout
-const LEAGUE_CARD_WIDTH = width * 0.75; 
+const LEAGUE_CARD_WIDTH = width * 0.75;
 const LEAGUE_CARD_HEIGHT = 180;
 
 const getOptimizedImage = (url, type = 'original') => {
-  if (!url || url.includes('via.placeholder') || url.includes('transparenttextures')) return url;
+  if (
+    !url ||
+    url.includes('via.placeholder') ||
+    url.includes('transparenttextures')
+  )
+    return url;
   switch (type) {
-    case 'tiny': return `${url}/tiny`;   
-    case 'small': return `${url}/small`;  
-    case 'preview': return `${url}/preview`; 
-    default: return url;
+    case 'tiny':
+      return `${url}/tiny`;
+    case 'small':
+      return `${url}/small`;
+    case 'preview':
+      return `${url}/preview`;
+    default:
+      return url;
   }
 };
 
 const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector(state => state.auth.user);
-  
+
   // --- STATE ---
   const [countries, setCountries] = useState([]);
-  const [filteredCountries, setFilteredCountries] = useState([]); 
-  const [selectedCountry, setSelectedCountry] = useState('England'); 
-  
-  const [leagues, setLeagues] = useState([]); 
-  
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState('England');
+
+  const [leagues, setLeagues] = useState([]);
+
   // Match Data State
   const [todaysMatches, setTodaysMatches] = useState([]);
   const [upcomingMatches, setUpcomingMatches] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [refreshingLeagues, setRefreshingLeagues] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [viewableItems, setViewableItems] = useState([]);
 
   // 1. Fetch Countries
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await axios.get('https://www.thesportsdb.com/api/v1/json/3/all_countries.php');
-        const sortedCountries = response.data.countries
-          .sort((a, b) => a.name_en.localeCompare(b.name_en));
-        
+        const response = await axios.get(
+          'https://www.thesportsdb.com/api/v1/json/3/all_countries.php',
+        );
+        const sortedCountries = response.data.countries.sort((a, b) =>
+          a.name_en.localeCompare(b.name_en),
+        );
+
         setCountries(sortedCountries);
-        setFilteredCountries(sortedCountries); 
+        setFilteredCountries(sortedCountries);
       } catch (error) {
-        console.error("Error fetching countries:", error);
+        console.error('Error fetching countries:', error);
       }
     };
     fetchCountries();
@@ -79,43 +91,60 @@ const HomeScreen = ({ navigation }) => {
     const fetchData = async () => {
       try {
         setRefreshingLeagues(true);
-        
+
         // A. Fetch Leagues
-        const searchRes = await axios.get(`https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=${selectedCountry}`);
-        
-        if (searchRes.data.countries || searchRes.data.leagues) { 
-           const rawLeagues = searchRes.data.countries || searchRes.data.leagues || [];
-           const MAJOR_SPORTS = ['Soccer', 'Basketball', 'Cricket', 'Motorsport', 'Rugby', 'Ice Hockey', 'American Football', 'Baseball', 'Fighting', 'Golf', 'Tennis'];
-           const filteredRaw = rawLeagues.filter(l => MAJOR_SPORTS.includes(l.strSport));
-           const topLeagues = filteredRaw.slice(0, 8); // Get top 8 for horizontal scroll
-           
-           const detailPromises = topLeagues.map(l => 
-             axios.get(`https://www.thesportsdb.com/api/v1/json/3/lookupleague.php?id=${l.idLeague}`)
-           );
+        const searchRes = await axios.get(
+          `https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=${selectedCountry}`,
+        );
 
-           const detailResponses = await Promise.all(detailPromises);
-           const cleanLeagues = detailResponses
-             .map(res => res.data.leagues ? res.data.leagues[0] : null)
-             .filter(item => item !== null);
+        if (searchRes.data.countries || searchRes.data.leagues) {
+          const rawLeagues =
+            searchRes.data.countries || searchRes.data.leagues || [];
+          const MAJOR_SPORTS = [
+            'Soccer',
+            'Basketball',
+            'Cricket',
+            'Motorsport',
+            'Rugby',
+            'Ice Hockey',
+            'American Football',
+            'Baseball',
+            'Fighting',
+            'Golf',
+            'Tennis',
+          ];
+          const filteredRaw = rawLeagues.filter(l =>
+            MAJOR_SPORTS.includes(l.strSport),
+          );
+          const topLeagues = filteredRaw.slice(0, 8); // Get top 8 for horizontal scroll
 
-           setLeagues(cleanLeagues);
+          const detailPromises = topLeagues.map(l =>
+            axios.get(
+              `https://www.thesportsdb.com/api/v1/json/3/lookupleague.php?id=${l.idLeague}`,
+            ),
+          );
 
-           // B. Fetch Matches for the #1 League in this country
-           if (cleanLeagues.length > 0) {
-             fetchMatches(cleanLeagues[0].idLeague);
-           } else {
-             setTodaysMatches([]);
-             setUpcomingMatches([]);
-           }
+          const detailResponses = await Promise.all(detailPromises);
+          const cleanLeagues = detailResponses
+            .map(res => (res.data.leagues ? res.data.leagues[0] : null))
+            .filter(item => item !== null);
 
+          setLeagues(cleanLeagues);
+
+          // B. Fetch Matches for the #1 League in this country
+          if (cleanLeagues.length > 0) {
+            fetchMatches(cleanLeagues[0].idLeague);
+          } else {
+            setTodaysMatches([]);
+            setUpcomingMatches([]);
+          }
         } else {
-           setLeagues([]);
-           setTodaysMatches([]);
-           setUpcomingMatches([]);
+          setLeagues([]);
+          setTodaysMatches([]);
+          setUpcomingMatches([]);
         }
-
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
         setLeagues([]);
       } finally {
         setRefreshingLeagues(false);
@@ -128,30 +157,32 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [selectedCountry]);
 
-  const fetchMatches = async (leagueId) => {
+  const fetchMatches = async leagueId => {
     try {
-      const res = await axios.get(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`);
+      const res = await axios.get(
+        `https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`,
+      );
       const events = res.data.events || [];
-      
+
       // Filter Today vs Upcoming
       // Note: Date format from API is usually YYYY-MM-DD
       const todayStr = new Date().toISOString().split('T')[0];
-      
+
       const today = events.filter(e => e.dateEvent === todayStr);
       const upcoming = events.filter(e => e.dateEvent !== todayStr);
-      
+
       setTodaysMatches(today);
       setUpcomingMatches(upcoming);
     } catch (e) {
-      console.log("No matches found");
+      console.log('No matches found');
     }
   };
 
-  const handleSearch = (text) => {
+  const handleSearch = text => {
     setSearchQuery(text);
     if (text) {
-      const filtered = countries.filter(c => 
-        c.name_en.toLowerCase().includes(text.toLowerCase())
+      const filtered = countries.filter(c =>
+        c.name_en.toLowerCase().includes(text.toLowerCase()),
       );
       setFilteredCountries(filtered);
     } else {
@@ -159,14 +190,14 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleCountrySelect = (countryName) => {
+  const handleCountrySelect = countryName => {
     setSelectedCountry(countryName);
-    setSearchQuery(''); 
-    setFilteredCountries(countries); 
+    setSearchQuery('');
+    setFilteredCountries(countries);
     Keyboard.dismiss();
   };
 
-  const handleLeaguePress = (league) => {
+  const handleLeaguePress = league => {
     dispatch(setActiveLeague(league));
     navigation.navigate('LeagueDashboard');
   };
@@ -176,22 +207,22 @@ const HomeScreen = ({ navigation }) => {
   const Header = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
-        {/* Updated: White circle background with primary colored icon */}
         <View style={styles.logoCircle}>
           <Feather name="activity" size={20} color="#3663b1" />
         </View>
-        {/* Updated: White Text */}
         <Text style={styles.headerTitle}>SportyX</Text>
       </View>
-      
-      {/* Updated: Navigation to Profile on press */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.profileButton}
         onPress={() => navigation.navigate('Profile')}
       >
-        <Image 
-          source={{ uri: getOptimizedImage(user?.image, 'tiny') || 'https://via.placeholder.com/40' }} 
-          style={styles.profileImage} 
+        <Image
+          source={{
+            uri:
+              getOptimizedImage(user?.image, 'tiny') ||
+              'https://via.placeholder.com/40',
+          }}
+          style={styles.profileImage}
         />
         <View style={styles.onlineBadge} />
       </TouchableOpacity>
@@ -203,9 +234,9 @@ const HomeScreen = ({ navigation }) => {
       <Text style={styles.sectionTitleSmall}>
         {searchQuery ? 'Search Results' : 'Browse by Country'}
       </Text>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 15 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -213,43 +244,100 @@ const HomeScreen = ({ navigation }) => {
           filteredCountries.map((country, index) => {
             const isSelected = selectedCountry === country.name_en;
             return (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 onPress={() => handleCountrySelect(country.name_en)}
-                style={[styles.countryChip, isSelected && styles.countryChipActive]}
+                style={[
+                  styles.countryChip,
+                  isSelected && styles.countryChipActive,
+                ]}
               >
-                <Text style={[styles.countryText, isSelected && styles.countryTextActive]}>
+                <Text
+                  style={[
+                    styles.countryText,
+                    isSelected && styles.countryTextActive,
+                  ]}
+                >
                   {country.name_en}
                 </Text>
               </TouchableOpacity>
             );
           })
         ) : (
-          <Text style={{ color: '#999', fontStyle: 'italic', marginTop: 10 }}>No countries found</Text>
+          <Text style={{ color: '#999', fontStyle: 'italic', marginTop: 10 }}>
+            No countries found
+          </Text>
         )}
       </ScrollView>
     </View>
   );
 
   const LeagueCardHorizontal = ({ league, onPress }) => {
-    const images = [league.strFanart1, league.strFanart2, league.strFanart3, league.strFanart4]
+    const favoriteLeagues = useSelector(state => state.sports.favoriteLeagues);
+    const isFavorite = favoriteLeagues.includes(league.idLeague);
+    
+    const images = [
+      league.strFanart1,
+      league.strFanart2,
+      league.strFanart3,
+      league.strFanart4,
+    ]
       .filter(img => img)
       .map(img => getOptimizedImage(img, 'preview'));
 
-    const bgImage = images.length > 0 ? images[0] : 'https://via.placeholder.com/400x200/3663b1/ffffff?text=No+Image';
+    const bgImage =
+      images.length > 0
+        ? images[0]
+        : 'https://via.placeholder.com/400x200/3663b1/ffffff?text=No+Image';
+
+    const toggleFavorite = (e) => {
+      e.stopPropagation();
+      dispatch(toggleFavoriteLeague(league.idLeague));
+    };
 
     return (
-      <TouchableOpacity style={styles.leagueCardH} activeOpacity={0.9} onPress={() => onPress(league)}>
-        <Image source={{ uri: bgImage }} style={styles.cardBg} resizeMode="cover" />
+      <TouchableOpacity
+        style={styles.leagueCardH}
+        activeOpacity={0.9}
+        onPress={() => onPress(league)}
+      >
+        <Image
+          source={{ uri: bgImage }}
+          style={styles.cardBg}
+          resizeMode="cover"
+        />
         <View style={styles.cardOverlay} />
+        
+        {/* Favorite Button */}
+        <TouchableOpacity 
+          style={styles.favoriteButton}
+          onPress={toggleFavorite}
+          activeOpacity={0.7}
+        >
+          <Feather 
+            name={isFavorite ? "heart" : "heart"} 
+            size={20} 
+            color={isFavorite ? "#ef4444" : "#ffffff"}
+            fill={isFavorite ? "#ef4444" : "transparent"}
+          />
+        </TouchableOpacity>
+
         <View style={styles.cardContent}>
           <View style={styles.cardTopRow}>
-             <View style={styles.sportBadge}>
-                <Text style={styles.sportBadgeText}>{league.strSport}</Text>
-             </View>
-             <Image source={{ uri: getOptimizedImage(league.strBadge, 'tiny') }} style={styles.leagueBadgeSmall} resizeMode="contain" />
+            <View style={styles.sportBadge}>
+              <Text style={styles.sportBadgeText}>{league.strSport}</Text>
+            </View>
           </View>
-          <Text style={styles.leagueNameH} numberOfLines={2}>{league.strLeague}</Text>
+          <View style={styles.cardBottom}>
+            <Text style={styles.leagueNameH} numberOfLines={2}>
+              {league.strLeague}
+            </Text>
+            <Image
+              source={{ uri: getOptimizedImage(league.strBadge, 'tiny') }}
+              style={styles.leagueBadgeSmall}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -263,13 +351,19 @@ const HomeScreen = ({ navigation }) => {
         </View>
       )}
       <View style={styles.matchRow}>
-        <Text style={styles.matchTeam} numberOfLines={1}>{match.strHomeTeam}</Text>
+        <Text style={styles.matchTeam} numberOfLines={1}>
+          {match.strHomeTeam}
+        </Text>
         <Text style={styles.vsText}>VS</Text>
-        <Text style={styles.matchTeam} numberOfLines={1}>{match.strAwayTeam}</Text>
+        <Text style={styles.matchTeam} numberOfLines={1}>
+          {match.strAwayTeam}
+        </Text>
       </View>
       <View style={styles.matchFooter}>
         <Text style={styles.matchDate}>{match.dateEvent}</Text>
-        <Text style={styles.matchTime}>{match.strTime ? match.strTime.substring(0,5) : 'TBD'}</Text>
+        <Text style={styles.matchTime}>
+          {match.strTime ? match.strTime.substring(0, 5) : 'TBD'}
+        </Text>
       </View>
     </View>
   );
@@ -286,14 +380,11 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar backgroundColor="#3663b1" barStyle="light-content" />
       <Header />
-
-      {/* Use FlatList to render Upcoming Matches vertically, everything else is in Header */}
       <FlatList
         data={upcomingMatches}
-        keyExtractor={(item) => item.idEvent}
+        keyExtractor={item => item.idEvent}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
-        
         ListHeaderComponent={
           <>
             {/* Search & Country */}
@@ -315,15 +406,26 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.sectionContainer}>
               <View style={styles.statusRow}>
                 <Text style={styles.sectionTitle}>
-                  Top Leagues in <Text style={{color: '#3663b1'}}>{selectedCountry}</Text>
+                  Top Leagues in{' '}
+                  <Text style={{ color: '#3663b1' }}>{selectedCountry}</Text>
                 </Text>
-                {refreshingLeagues && <ActivityIndicator size="small" color="#3663b1" />}
+                {refreshingLeagues && (
+                  <ActivityIndicator size="small" color="#3663b1" />
+                )}
               </View>
-              
+
               {leagues.length > 0 ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 15 }}
+                >
                   {leagues.map(league => (
-                    <LeagueCardHorizontal key={league.idLeague} league={league} onPress={handleLeaguePress} />
+                    <LeagueCardHorizontal
+                      key={league.idLeague}
+                      league={league}
+                      onPress={handleLeaguePress}
+                    />
                   ))}
                 </ScrollView>
               ) : (
@@ -335,26 +437,49 @@ const HomeScreen = ({ navigation }) => {
               )}
             </View>
 
-            {/* Today's Matches (Horizontal Strip) */}
+            {/* Today's Matches  */}
             {todaysMatches.length > 0 && (
               <View style={styles.sectionContainer}>
-                <Text style={[styles.sectionTitle, { marginLeft: 15 }]}>Today's Matches</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15, paddingTop: 10 }}>
+                <Text style={[styles.sectionTitle, { marginLeft: 15 }]}>
+                  Today's Matches
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{
+                    paddingHorizontal: 15,
+                    paddingTop: 10,
+                  }}
+                >
                   {todaysMatches.map(match => (
-                    <MatchCard key={match.idEvent} match={match} isToday={true} />
+                    <MatchCard
+                      key={match.idEvent}
+                      match={match}
+                      isToday={true}
+                    />
                   ))}
                 </ScrollView>
               </View>
             )}
 
             {/* Upcoming Matches Title */}
-            <Text style={[styles.sectionTitle, { marginLeft: 15, marginTop: 10, marginBottom: 10 }]}>Upcoming Matches</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { marginLeft: 15, marginTop: 10, marginBottom: 10 },
+              ]}
+            >
+              Upcoming Matches
+            </Text>
             {upcomingMatches.length === 0 && !refreshingLeagues && (
-               <Text style={{ marginLeft: 15, color: '#999', fontStyle: 'italic' }}>No upcoming matches scheduled.</Text>
+              <Text
+                style={{ marginLeft: 15, color: '#999', fontStyle: 'italic' }}
+              >
+                No upcoming matches scheduled.
+              </Text>
             )}
           </>
         }
-
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 15, marginBottom: 10 }}>
             <MatchCard match={item} isToday={false} />
@@ -368,78 +493,216 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  
+
   // Header & Search
-  headerContainer: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: 20, 
-    paddingVertical: 15, 
-    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50, 
-    backgroundColor: '#3663b1' // Changed to Primary Color
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
+    backgroundColor: '#3663b1', // Changed to Primary Color
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  logoCircle: { 
-    width: 32, 
-    height: 32, 
-    borderRadius: 16, 
+  logoCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'white', // Changed to white for contrast
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginRight: 10 
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
-  headerTitle: { 
-    fontSize: 20, 
-    fontWeight: '800', 
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
     color: 'white', // Changed to white
-    letterSpacing: 0.5 
+    letterSpacing: 0.5,
   },
-  profileImage: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'white' },
-  onlineBadge: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#2ecc71', position: 'absolute', bottom: 0, right: 0, borderWidth: 2, borderColor: 'white' },
-  
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  onlineBadge: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#2ecc71',
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+
   searchWrapper: { paddingHorizontal: 15, marginVertical: 15 },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 12, paddingHorizontal: 15, height: 50, borderWidth: 1, borderColor: '#eee' },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333' },
 
   // Country Selector
   countrySection: { marginBottom: 20 },
-  sectionTitleSmall: { fontSize: 14, fontWeight: '600', color: '#888', marginLeft: 20, marginBottom: 10, textTransform: 'uppercase' },
-  countryChip: { paddingHorizontal: 18, paddingVertical: 10, backgroundColor: 'white', borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#eee', minWidth: 80, alignItems: 'center' },
+  sectionTitleSmall: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+    marginLeft: 20,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+  },
+  countryChip: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+    minWidth: 80,
+    alignItems: 'center',
+  },
   countryChipActive: { backgroundColor: '#3663b1', borderColor: '#3663b1' },
   countryText: { color: '#555', fontWeight: '600' },
   countryTextActive: { color: 'white' },
 
   // Section Layout
   sectionContainer: { marginBottom: 25 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, marginBottom: 15 },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+  },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
 
   // Horizontal League Card
-  leagueCardH: { width: LEAGUE_CARD_WIDTH, height: LEAGUE_CARD_HEIGHT, marginRight: 15, borderRadius: 15, overflow: 'hidden', backgroundColor: '#333' },
+  leagueCardH: {
+    width: LEAGUE_CARD_WIDTH,
+    height: LEAGUE_CARD_HEIGHT,
+    marginRight: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: '#333',
+  },
   cardBg: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
-  cardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
+  cardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
   cardContent: { flex: 1, padding: 15, justifyContent: 'space-between' },
-  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  leagueBadgeSmall: { width: 40, height: 40 },
-  sportBadge: { backgroundColor: 'rgba(54, 99, 177, 0.8)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  cardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  leagueBadgeSmall: { 
+    width: 50, 
+    height: 50,
+    marginLeft: 10,
+  },
+  sportBadge: {
+    backgroundColor: 'rgba(54, 99, 177, 0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   sportBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  leagueNameH: { color: 'white', fontSize: 20, fontWeight: 'bold', textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: {width:-1, height:1}, textShadowRadius: 5 },
+  leagueNameH: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 2,
+    flex: 1,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
 
   // Match Card
-  matchCard: { backgroundColor: 'white', borderRadius: 12, padding: 15, borderWidth: 1, borderColor: '#f0f0f0', marginBottom: 5 },
-  matchCardToday: { borderWidth: 1, borderColor: '#3663b1', minWidth: 260, marginRight: 15 }, // Special style for Today
-  liveBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#e74c3c', paddingHorizontal: 8, paddingVertical: 4, borderTopRightRadius: 11, borderBottomLeftRadius: 8 },
+  matchCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    marginBottom: 5,
+  },
+  matchCardToday: {
+    borderWidth: 1,
+    borderColor: '#3663b1',
+    minWidth: 260,
+    marginRight: 15,
+  }, // Special style for Today
+  liveBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderTopRightRadius: 11,
+    borderBottomLeftRadius: 8,
+  },
   liveText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-  matchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 },
-  matchTeam: { fontSize: 14, fontWeight: '700', color: '#333', flex: 1, textAlign: 'center' },
-  vsText: { fontSize: 12, color: '#999', fontWeight: 'bold', marginHorizontal: 10 },
-  matchFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 },
+  matchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  matchTeam: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#333',
+    flex: 1,
+    textAlign: 'center',
+  },
+  vsText: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: 'bold',
+    marginHorizontal: 10,
+  },
+  matchFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
   matchDate: { color: '#888', fontSize: 12 },
   matchTime: { color: '#3663b1', fontWeight: 'bold', fontSize: 12 },
 
   emptyBox: { paddingHorizontal: 15 },
-  emptyText: { color: '#999', fontStyle: 'italic' }
+  emptyText: { color: '#999', fontStyle: 'italic' },
 });
 
 export default HomeScreen;
